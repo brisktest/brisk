@@ -4,8 +4,8 @@
     "description": "",
     "main": "./lib/index.js",
     "bin": {
-        "more-faster": "./out/entryPoint.js",
-        "more-faster-sync": "./out/rsyncEntryPoint.js"
+        "more-faster": "./build/entryPoint.js",
+        "more-faster-sync": "./build/rsyncEntryPoint.js"
     },
     "scripts": {
         "start": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",
