@@ -1,0 +1,57 @@
+import { execSync } from 'child_process'
+import { config } from '../config'
+
+function startAll(hosts: string[]) {
+    const procs = hosts.map((host: string) => {
+        execSync(`DOCKER_HOST=${host} docker-compose up -d`)
+    })
+}
+
+function startHost(host: string, cwd: string) {
+    execSync(` DOCKER_HOST=${host} docker-compose up -d`, { cwd })
+}
+
+export function checkStatus(host: string, dockerFilePath: string) {
+    return (
+        systemSync(
+            `DOCKER_HOST=${host} docker-compose ps -q ${config.dockerContainer}`,
+            dockerFilePath
+        ) ||
+        systemSync(
+            `DOCKER_HOST=${host} docker ps -q --no-trunc | grep $(docker-compose ps -q ${config.dockerContainer})`,
+            dockerFilePath
+        )
+    )
+}
+
+export function setupRemote(dockerFilePath: string) {
+    Object.keys(config.hosts).map((host: string) => {
+        // if (checkStatus(host, dockerFilePath)) {
+        //     console.log('Everything running')
+        //     return true
+        // } else {
+        //     console.log('need to start things')
+        //   addToKnownHost(host)
+        return startHost(host, dockerFilePath)
+        // }
+    })
+}
+
+function addToKnownHost(host: string) {
+    const hostname: string = new URL(host).hostname
+    execSync(`ssh-keyscan -H ${hostname} >> ~/.ssh/known_hosts`)
+}
+
+function systemSync(cmd: string, cwd: string) {
+    try {
+        execSync(cmd, { cwd }).toString()
+        return true
+    } catch (error) {
+        error.status // Might be 127 in your example.
+        error.message // Holds the message you typically want.
+        error.stderr // Holds the stderr output. Use `.toString()`.
+        error.stdout // Holds the stdout output. Use `.toString()`.
+        console.log('non zero exit code from systemSync with command: ', cmd)
+        return false
+    }
+}
