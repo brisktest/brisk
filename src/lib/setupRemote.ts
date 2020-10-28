@@ -1,5 +1,5 @@
-import { execSync } from 'child_process'
-import { config } from '../config'
+import { exec, execSync } from 'child_process'
+import { config, getHostnames } from '../config'
 
 function startAll(hosts: string[]) {
     const procs = hosts.map((host: string) => {
@@ -8,7 +8,22 @@ function startAll(hosts: string[]) {
 }
 
 function startHost(host: string, cwd: string) {
-    execSync(` DOCKER_HOST=${host} docker-compose up -d`, { cwd })
+    return new Promise(function (resolve, reject) {
+        exec(
+            ` DOCKER_HOST=${host} docker-compose up -d`,
+            { cwd },
+            (error, stdout, stderr) => {
+                if (error) {
+                    console.error(`exec error: ${error}`)
+                    reject
+                    return
+                }
+                console.log(`stdout: ${stdout}`)
+                console.error(`stderr: ${stderr}`)
+                resolve
+            }
+        )
+    })
 }
 
 export function checkStatus(host: string, dockerFilePath: string) {
@@ -24,17 +39,25 @@ export function checkStatus(host: string, dockerFilePath: string) {
     )
 }
 
-export function setupRemote(dockerFilePath: string) {
-    Object.keys(config.hosts).map((host: string) => {
-        // if (checkStatus(host, dockerFilePath)) {
-        //     console.log('Everything running')
-        //     return true
-        // } else {
-        //     console.log('need to start things')
-        //   addToKnownHost(host)
-        return startHost(host, dockerFilePath)
-        // }
-    })
+export async function setupRemote(dockerFilePath: string) {
+    if (!process.env.SETUP_REMOTE) return true
+
+    await Promise.all(
+        Object.keys(config.hosts).map((host: string) => {
+            // if (checkStatus(host, dockerFilePath)) {
+            //     console.log('Everything running')
+            //     return true
+            // } else {
+            //     console.log('need to start things')
+            //   addToKnownHost(host)
+            return startHost(host, dockerFilePath)
+            // }
+        })
+    )
+}
+
+export function addKeysForHosts() {
+    getHostnames().map(addToKnownHost)
 }
 
 function addToKnownHost(host: string) {

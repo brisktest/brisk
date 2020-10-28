@@ -85,16 +85,18 @@ export function splitFiles(
     cwd: string,
     globPattern = 'tests/**/*.test.ts',
     splitMethod = 'LINE_COUNT'
-) {
-    let files: string[] = []
+): Promise<string[]> {
+    return new Promise((resolve, reject) => {
+        let files: string[] = []
 
-    switch (splitMethod) {
-        case 'LINE_COUNT':
-            files = getFiles(numHosts, thisHost, globPattern, cwd)
-            break
-        default:
-            console.error('No splitter provided')
-    }
+        switch (splitMethod) {
+            case 'LINE_COUNT':
+                files = getFiles(numHosts, thisHost, globPattern, cwd)
+                break
+            default:
+                console.error('No splitter provided')
+        }
 
-    return files
+        resolve(files)
+    })
 }

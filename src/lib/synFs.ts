@@ -31,7 +31,7 @@ export function runSyncFs(
 // watches for local FS changes and rsync to the remote
 function syncFS(hostname: string, cwd: string, workspace: string) {
     console.log(hostname)
- 
+
     // Build the command
     var rsync = new Rsync()
         .shell('ssh')
@@ -57,6 +57,4 @@ function syncFS(hostname: string, cwd: string, workspace: string) {
             printToStdErr(data.toString())
         }
     )
-
- 
 }
