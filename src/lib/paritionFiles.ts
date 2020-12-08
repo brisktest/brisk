@@ -1,9 +1,44 @@
-import { execSync } from 'child_process'
+import { exec } from 'child_process'
 import glob from 'glob'
+import { config } from '../config'
 
-function lineCount(filename: string): number {
-    const results = execSync(`wc -c <  ${filename}`)
-    return parseInt(results.toString())
+var shellParser = require('node-shell-parser')
+//need to make this promises
+function lineCount(filename: string): Promise<number> {
+    return new Promise((resolve, reject) => {
+        console.log('filename is ', filename)
+        exec(`wc -c <  ${filename}`, (error, results, err) => {
+            console.log(error)
+            console.log(results)
+            console.log(err)
+            const res = parseInt(results.toString())
+            resolve(res)
+        })
+    })
+}
+
+function wordCountForFiles(
+    filenames: string[]
+): Promise<Record<string, string>> {
+    return new Promise((resolve, reject) => {
+        console.debug('filesnames are ', filenames)
+        exec(`wc -c ${filenames.map((filename) => `"${filename}"` ).join(' ')}`, {}, (error, stdout, stderr) => {
+            if (error) {
+                console.error(error)
+            }
+            console.log('split by lines')
+            console.error(stderr)
+            const lines = stdout.split('\n')
+
+            const output = Object.fromEntries(
+                lines.map((l) => {
+                    return l.split(' ').reverse()
+                })
+            )
+
+            resolve(output)
+        })
+    })
 }
 
 function splitFilesByCount(
@@ -23,6 +58,7 @@ function splitFilesByCount(
     while (lineArray[endIndex] <= endLineCount) {
         endIndex++
     }
+    console.log('near end of split')
 
     return fileArray.slice(startIndex, endIndex)
 }
@@ -44,46 +80,64 @@ function getFiles(
     thisHost: number,
     globPattern: string,
     cwd: string
-): string[] {
-    console.debug('the pattern is ', globPattern)
-    console.debug('the CWD is ', cwd)
-    const allFiles = glob.sync(globPattern, { cwd })
+): Promise<string[]> {
+    return new Promise(async (resolve, reject) => {
+        console.debug('the pattern is ', globPattern)
+        console.debug('the CWD is ', cwd)
+        console.debug('about to glob')
+        console.log('cwd == ', cwd)
 
-    const allLines = [...allFiles].map(function (filename) {
-        return lineCount(filename)
+        if (config.testPathIgnorePatterns)
+            console.debug('Ignore pattern is ', config.testPathIgnorePatterns)
+        glob(
+            globPattern,
+            { cwd, ignore: config.testPathIgnorePatterns || false },
+            (error, allFiles) => {
+                if (error) {
+                    console.error(error)
+                }
+
+                console.log('allfiles are :', allFiles)
+                wordCountForFiles(allFiles).then((filesToCount) => {
+                    const allLines = [...allFiles].map(function (filename) {
+                        return parseInt(filesToCount[filename])
+                    })
+
+                    const add = (a: number, b: number): number => a + b
+                    const cumulativeLC = allLines.map(function (lc, index) {
+                        if (index > 0) {
+                            return allLines.slice(0, index).reduce(add)
+                        } else {
+                            return allLines[0]
+                        }
+                    })
+                    // now we split the lines into the nodes
+                    const nodeLines = cumulativeLC[cumulativeLC.length - 1]
+
+                    const avLines = Math.ceil(nodeLines / numHosts)
+
+                    const startLineCount = avLines * thisHost
+
+                    const endLineCount = startLineCount + avLines
+                    const splitFiles = splitFilesByCount(
+                        allFiles,
+                        cumulativeLC,
+                        startLineCount,
+                        endLineCount
+                    )
+
+                    return resolve(splitFiles)
+                })
+            }
+        )
     })
-
-    const add = (a: number, b: number): number => a + b
-    const cumulativeLC = allLines.map(function (lc, index) {
-        if (index > 0) {
-            return allLines.slice(0, index).reduce(add)
-        } else {
-            return allLines[0]
-        }
-    })
-
-    // now we split the lines into the nodes
-    const nodeLines = cumulativeLC[cumulativeLC.length - 1]
-
-    const avLines = Math.ceil(nodeLines / numHosts)
-
-    const startLineCount = avLines * thisHost
-
-    const endLineCount = startLineCount + avLines
-
-    return splitFilesByCount(
-        allFiles,
-        cumulativeLC,
-        startLineCount,
-        endLineCount
-    )
 }
 
 export function splitFiles(
     numHosts: number,
     thisHost: number,
     cwd: string,
-    globPattern = 'tests/**/*.test.ts',
+    globPattern = config.testPattern || 'tests/**/*.test.ts',
     splitMethod = 'LINE_COUNT'
 ): Promise<string[]> {
     return new Promise((resolve, reject) => {
@@ -91,12 +145,10 @@ export function splitFiles(
 
         switch (splitMethod) {
             case 'LINE_COUNT':
-                files = getFiles(numHosts, thisHost, globPattern, cwd)
+                getFiles(numHosts, thisHost, globPattern, cwd).then(resolve)
                 break
             default:
                 console.error('No splitter provided')
         }
-
-        resolve(files)
     })
 }

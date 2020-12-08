@@ -1,6 +1,7 @@
 import chokidar from 'chokidar'
 import Rsync from 'rsync'
 import url from 'url'
+import { config } from '../config'
 export function startSyncForHosts(
     hosts: string[],
     localPath: string,
@@ -22,9 +23,9 @@ export function runSyncFs(
     //run once at the begininng then watch
     syncFS(justUsername + '@' + justHostname, localPath, remotePath)
 
-    chokidar.watch(localPath).on('change', (event, path) => {
-        console.log(event, path)
-        syncFS(justUsername + '@' + justHostname, localPath, remotePath)
+    chokidar.watch(localPath).on('change', (path: string) => {
+        console.log(path)
+        syncFS(justUsername + '@' + justHostname, path.toString(), remotePath + path.toString())
     })
 }
 
@@ -35,9 +36,15 @@ function syncFS(hostname: string, cwd: string, workspace: string) {
     // Build the command
     var rsync = new Rsync()
         .shell('ssh')
-        .flags('av')
+        .flags('avz')
         .source(cwd)
-        .destination(`${hostname}:${workspace}`)
+        .delete()
+        .exclude('.git')
+        .destination(`${hostname}:${workspace}`) ;
+        
+        (config.syncExcludePath || []).forEach((element:string) => {
+            rsync.exclude(element)
+        });
 
     const printToStdout = (data: string) => {
         console.log(data)
@@ -51,10 +58,10 @@ function syncFS(hostname: string, cwd: string, workspace: string) {
             if (error) console.log(error)
         },
         function (data: Buffer) {
-            printToStdout(data.toString())
+            if (data) printToStdout(data.toString())
         },
         function (data: Buffer) {
-            printToStdErr(data.toString())
+            if (data) printToStdErr(data.toString())
         }
     )
 }

@@ -9,8 +9,9 @@ function startAll(hosts: string[]) {
 
 function startHost(host: string, cwd: string) {
     return new Promise(function (resolve, reject) {
+        console.log('about to exec')
         exec(
-            ` DOCKER_HOST=${host} docker-compose up -d`,
+            ` DOCKER_HOST=${host} docker-compose up  --build -d --remove-orphans `,
             { cwd },
             (error, stdout, stderr) => {
                 if (error) {
@@ -39,10 +40,22 @@ export function checkStatus(host: string, dockerFilePath: string) {
     )
 }
 
+export async function synSetupRemote(dockerFilePath: string) {
+    if (!process.env.SETUP_REMOTE) return true
+
+    return new Promise((resolve, reject) => {
+        Promise.all(
+            getHostnames().map(async (host) => {
+                return await startHost(host, dockerFilePath)
+            })
+        ).then(resolve)
+    })
+}
+
 export async function setupRemote(dockerFilePath: string) {
     if (!process.env.SETUP_REMOTE) return true
 
-    await Promise.all(
+    return await Promise.all(
         Object.keys(config.hosts).map((host: string) => {
             // if (checkStatus(host, dockerFilePath)) {
             //     console.log('Everything running')
@@ -50,6 +63,7 @@ export async function setupRemote(dockerFilePath: string) {
             // } else {
             //     console.log('need to start things')
             //   addToKnownHost(host)
+            console.log('starting host: ', host)
             return startHost(host, dockerFilePath)
             // }
         })

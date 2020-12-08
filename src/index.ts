@@ -3,7 +3,7 @@ import path from 'path'
 import { config } from './config'
 import { findProjectRoot } from './findProjectRoot'
 import { splitFiles } from './lib/paritionFiles'
-import { setupRemote } from './lib/setupRemote'
+import { synSetupRemote } from './lib/setupRemote'
 
 export const runMoreFaster = async () => {
     // const chalk = require('chalk')
@@ -85,31 +85,20 @@ export const runMoreFaster = async () => {
     //     program.outputHelp()
     // }
 
+    var myArgs = process.argv.slice(2);
+
     const workDir = process.cwd() // '/Users/sean/Programming/snackpass-server/.devcontainer/'
 
-    function args(files: string[] = []): string[] {
-        return [
-            ...[
-                'exec',
-                '-T',
-                '-w /workspace',
-                '-e TERM=xterm-256color',
-
-                //"npm run test"
-            ],
-            ...(config.remoteEnv || []).map((env: string) => `-e ${env}`),
-            ...[config.dockerContainer],
-            ...config.cmdArgs,
-            ...files,
-        ]
-    }
     const pathToDockerFile = config.pathToDockerFile || './'
 
     const rootOfProject = findProjectRoot(workDir)
     const dockerFilePath = path.join(rootOfProject, pathToDockerFile)
 
     console.log(Object.keys(config.hosts), dockerFilePath)
-    setupRemote(dockerFilePath).then(async () => {
+
+    //setupRemote(dockerFilePath).then(() => {
+    synSetupRemote(dockerFilePath).then(() => {
+        console.log('hosts setup....')
         const options: { [key: string]: any } = {
             env: { ...process.env },
             shell: true,
@@ -129,10 +118,16 @@ export const runMoreFaster = async () => {
                         HOME: process.env.HOME,
                     },
                 }
+                // should make this configurable with a test dir maybe?
+                // or potentially another test pattern e.g. .test
+                // take test dir from file and also file type
+                const myPattern = myArgs[0] ? `tests/**/*${myArgs[0]}*.ts` : undefined
+                    
                 return splitFiles(
                     Object.keys(config.hosts).length,
                     index,
-                    workDir
+                    workDir,
+                    myPattern
                 ).then((files) => {
                     console.log('the files are ', files)
 
@@ -145,69 +140,22 @@ export const runMoreFaster = async () => {
             }
         )
 
-        const processes = await Promise.all(processPromise)
-        const outputFiles = processes.map((p: any) => {
-            const jsonOutputStore: string[] = ['']
-            configureOutput(p, processes, jsonOutputStore)
-            return jsonOutputStore
+        Promise.all(processPromise).then((processes) => {
+            processes.map((p: any) => {
+                const jsonOutputStore: string[] = ['']
+                configureOutput(p, processes, jsonOutputStore)
+                return jsonOutputStore
+            })
         })
     })
+
     // const output = spawn('docker-compose', args, options)
     // const output2 = spawn('docker-compose', args, options)
 
     // let testCommands = [output, output2]
     // testCommands.map((c) => configureOutput(c))
-    function configureOutput(
-        spawnProcess: ChildProcessWithoutNullStreams,
-        processes: ChildProcessWithoutNullStreams[],
-        jsonOutput: string[]
-    ) {
-        spawnProcess.stdout.on('data', (data: any) => {
-            console.log(`${spawnProcess.pid} stdout: ${data}`)
-            jsonOutput.push(data)
-        })
-
-        spawnProcess.stderr.on('data', (data: any) => {
-            console.log(`${spawnProcess.pid} stderr: ${data}`)
-        })
-
-        spawnProcess.on('error', (error: { message: any }) => {
-            console.log(`${spawnProcess.pid} error: ${error.message}`)
-        })
-
-        spawnProcess.on('close', (code: any) => {
-            console.log(
-                `${spawnProcess.pid} child process exited with code ${code}`
-            )
-            checkFinished(processes)
-        })
-    }
 
     //check exit code and exit
-    function checkFinished(testCommands: any[]) {
-        if (
-            testCommands
-                .map((subProcess: { exitCode: any }) => {
-                    return subProcess.exitCode
-                })
-                .filter((exitCode: null) => {
-                    return exitCode === null
-                }).length === 0
-        ) {
-            console.log('Seems like all done')
-            console.log(
-                'exit codes are ',
-                testCommands.map((subProcess: { exitCode: any }) => {
-                    return subProcess.exitCode
-                })
-            )
-
-            //outputFiles.map((file: string[]) => {prettyPrintOutput(file)})
-            process.exit(0)
-        } else {
-            console.log('not done yet')
-        }
-    }
 
     // async function runCommmands(commands:[string]) {
     //     commands.map(async command => {
@@ -230,4 +178,76 @@ export const runMoreFaster = async () => {
     // }
     //console.log('running ', testCommand)
     //console.log( runCommmands([testCommand]))
+}
+
+function args(files: string[] = []): string[] {
+    return [
+        ...[
+            'exec',
+            '-T',
+            '-w /workspace',
+            '-e TERM=xterm-256color',
+           // '--rebuild'
+
+            //"npm run test"
+        ],
+        ...(config.remoteEnv || []).map((env: string) => `-e ${env}`),
+        ...[config.dockerContainer],
+        ...config.cmdArgs,
+        ...files,
+    ]
+}
+function checkFinished(testCommands: any[]) {
+    if (
+        testCommands
+            .map((subProcess: { exitCode: any }) => {
+                return subProcess.exitCode
+            })
+            .filter((exitCode: null) => {
+                return exitCode === null
+            }).length === 0
+    ) {
+        console.log('Seems like all done')
+        console.log(
+            'exit codes are ',
+            testCommands.map((subProcess: { exitCode: any }) => {
+                return subProcess.exitCode
+            })
+        )
+
+        //outputFiles.map((file: string[]) => {prettyPrintOutput(file)})
+        process.exit(0)
+    } else {
+        console.log('not done yet')
+    }
+}
+
+function configureOutput(
+    spawnProcess: ChildProcessWithoutNullStreams,
+    processes: ChildProcessWithoutNullStreams[],
+    jsonOutput: string[]
+) {
+    spawnProcess.stdout.on('data', (data: any) => {
+       // console.log(`${spawnProcess.pid} stdout: ${data}`)
+       //console.log(data.toString())
+//jsonOutput.push(data)
+    })
+
+    spawnProcess.stderr.on('data', (data: any) => {
+         if(process.env.VERBOSE_OUTPUT){
+        //console.log(`${spawnProcess.pid} stderr: ${data}`)
+        process.stdout.write(data)
+         }
+    })
+
+    spawnProcess.on('error', (error: { message: any }) => {
+        console.log(`${spawnProcess.pid} error: ${error.message}`)
+    })
+
+    spawnProcess.on('close', (code: any) => {
+        console.log(
+            `${spawnProcess.pid} child process exited with code ${code}`
+        )
+        checkFinished(processes)
+    })
 }

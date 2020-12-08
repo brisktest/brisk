@@ -14,7 +14,7 @@
         "build": "tsc -p .",
         "local": "sudo npm i -g && pizza",
         "refresh": "rm -rf ./node_modules ./package-lock.json && npm install",
-        "prettier": "prettier src/**/*.ts --write"
+        "prettier": "prettier **/*.ts --write"
     },
     "author": "",
     "license": "ISC",
@@ -28,6 +28,7 @@
         "commander": "^6.0.0",
         "figlet": "^1.5.0",
         "glob": "^7.1.6",
+        "node-shell-parser": "^0.2.1",
         "path": "^0.12.7",
         "prettier": "^2.1.1",
         "rsync": "^0.6.1",
