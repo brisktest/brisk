@@ -1,12 +1,12 @@
 {
     "name": "@brisk-test/brisk",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "",
     "main": "./lib/index.js",
     "bin": {
-        "more-faster": "./build/entryPoint.js",
-        "more-faster-sync": "./build/rsyncEntryPoint.js",
-        "more-faster-setup-keys": "./build/setupKeysEntryPoint.js"
+        "brisk": "./build/entryPoint.js",
+        "brisk-sync": "./build/rsyncEntryPoint.js",
+        "brisk-setup-keys": "./build/setupKeysEntryPoint.js"
     },
     "scripts": {
         "start": "nodemon --watch 'src/**/*.ts' --exec 'ts-node' src/index.ts",

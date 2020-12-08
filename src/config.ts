@@ -4,7 +4,7 @@ let config: { [key: string]: any }
 const projectRoot = findProjectRoot(process.cwd.toString())
 
 try {
-    config = require(projectRoot + '/more-faster.json')
+    config = require(projectRoot + '/brisk.json')
 } catch (e) {
     console.log(e.message)
     config = {}
