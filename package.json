@@ -1,6 +1,6 @@
 {
-    "name": "more-faster",
-    "version": "1.0.1",
+    "name": "@brisk-test/brisk-test",
+    "version": "1.0",
     "description": "",
     "main": "./lib/index.js",
     "bin": {
