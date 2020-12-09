@@ -21,13 +21,14 @@ function wordCountForFiles(
     filenames: string[]
 ): Promise<Record<string, string>> {
     return new Promise((resolve, reject) => {
-        console.debug('filesnames are ', filenames)
+        
+        //console.debug('filesnames are ', filenames)
         exec(`wc -c ${filenames.map((filename) => `"${filename}"` ).join(' ')}`, {}, (error, stdout, stderr) => {
             if (error) {
                 console.error(error)
             }
-            console.log('split by lines')
-            console.error(stderr)
+            //console.log('split by lines')
+            //console.error(stderr)
             const lines = stdout.split('\n')
 
             const output = Object.fromEntries(
@@ -58,7 +59,7 @@ function splitFilesByCount(
     while (lineArray[endIndex] <= endLineCount) {
         endIndex++
     }
-    console.log('near end of split')
+    //console.log('near end of split')
 
     return fileArray.slice(startIndex, endIndex)
 }
@@ -97,7 +98,7 @@ function getFiles(
                     console.error(error)
                 }
 
-                console.log('allfiles are :', allFiles)
+                //console.log('allfiles are :', allFiles)
                 wordCountForFiles(allFiles).then((filesToCount) => {
                     const allLines = [...allFiles].map(function (filename) {
                         return parseInt(filesToCount[filename])

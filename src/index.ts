@@ -121,15 +121,16 @@ export const runMoreFaster = async () => {
                 // should make this configurable with a test dir maybe?
                 // or potentially another test pattern e.g. .test
                 // take test dir from file and also file type
-                const myPattern = myArgs[0] ? `tests/**/*${myArgs[0]}*.ts` : undefined
-                    
+                //  const myPattern = myArgs[0] ? `tests/**/*${myArgs[0]}*.ts` : undefined
+                const myPattern = myArgs[0] ? `**/*${myArgs[0]}*` : undefined
+
                 return splitFiles(
                     Object.keys(config.hosts).length,
                     index,
                     workDir,
                     myPattern
                 ).then((files) => {
-                    console.log('the files are ', files)
+                    //console.log('the files are ', files)
 
                     const proc = spawn(config.dockerCommand, args(files), {
                         ...options,

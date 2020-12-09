@@ -1,5 +1,26 @@
 # Brisk
 
+# Installing
+
+npm i @brisk-test/brisk
+or
+yarn add @brisk-test/brisk
+
+# Running
+
+(you may need to prefix these commands with ./node_modules/.bin/ depending on where you have installed brisk)
+
+Run this command to add ssh keys for the hosts in brisk.json. If you already have connected to these hosts over ssh you can skip this step
+
+brisk-setup-keys
+
+This command syncs your filesystem with the remote hosts, leave this running and it will watch your directory and sync updates. Run in the project root.
+brisk-sync
+
+When you want to run a series of tests run this command
+
+VERBOSE_OUTPUT=true brisk
+
 # Configuration
 
 Place a file called brisk.json in root of project. Here is an example.
