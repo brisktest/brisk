@@ -18,9 +18,13 @@ Run this command to add ssh keys for the hosts in brisk.json. If you already hav
 
 This command syncs your filesystem with the remote hosts, leave this running and it will watch your directory and sync updates. Run in the project root.
 
+### SETUP_REMOTE=true brisk
+
+Run this the first time you use a new host to set things up
+
 ### VERBOSE_OUTPUT=true brisk
 
-To run your test suite
+Each time you want to run your test suite, super fast.
 
 # Configuration
 

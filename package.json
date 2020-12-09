@@ -1,8 +1,9 @@
 {
     "name": "@brisk-test/brisk",
-    "version": "1.0.8",
-    "description": "",
+    "version": "1.0.9",
+    "description": "Brisk makes it easy to run your entire test suite without committing your code to git",
     "main": "./lib/index.js",
+    "keywords": ["test", "jest","ci","tdd", "local testing"],
     "bin": {
         "brisk": "./build/entryPoint.js",
         "brisk-sync": "./build/rsyncEntryPoint.js",
