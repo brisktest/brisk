@@ -28,8 +28,6 @@ WORKDIR $INSTALL_PATH
 
 RUN gem install rails bundler
 RUN mkdir -p tmp/pids
-ADD package.json yarn.lock ./
-RUN yarn install --check-files
 ADD Gemfile.lock ./
 ADD Gemfile ./
 RUN bundle install 
