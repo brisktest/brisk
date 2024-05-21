@@ -26,7 +26,7 @@ services:
       RUNNER_COMMAND_TIMEOUT: "30m"   
     platform: linux/amd64      
     build:
-      context: ../
+      context: ./core
       dockerfile: docker/worker-node-lts.Dockerfile
     sysctls:
       - net.ipv4.tcp_keepalive_intvl=10

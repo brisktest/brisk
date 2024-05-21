@@ -17,7 +17,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       DEV: "true"
     build:
-      context: ../../brisk-frontend
+      context: ./api
       dockerfile: Dockerfile.dev
     deploy:
       restart_policy:

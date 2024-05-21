@@ -4,7 +4,7 @@ services:
     depends_on:
       - super-setup
     build:
-      context: ../
+      context: ./core
       dockerfile: docker/super.Dockerfile
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
