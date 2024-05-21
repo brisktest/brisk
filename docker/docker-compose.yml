@@ -12,7 +12,7 @@ services:
       - super-setup
     build:
       context: ../core
-      dockerfile: docker/super.Dockerfile
+      dockerfile: ../docker/super.Dockerfile
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - super-keys:/keys:rw
@@ -82,7 +82,7 @@ services:
     platform: linux/amd64      
     build:
       context: ../core
-      dockerfile: docker/worker-node-lts.Dockerfile
+      dockerfile: ../docker/worker-node-lts.Dockerfile
     sysctls:
       - net.ipv4.tcp_keepalive_intvl=10
       - net.ipv4.tcp_keepalive_probes=150

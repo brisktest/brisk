@@ -5,7 +5,7 @@ services:
       - super-setup
     build:
       context: ../core
-      dockerfile: docker/super.Dockerfile
+      dockerfile: ../docker/super.Dockerfile
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - super-keys:/keys:rw
