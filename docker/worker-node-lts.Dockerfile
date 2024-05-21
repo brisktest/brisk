@@ -23,11 +23,7 @@ RUN apt-get update && apt-get install -y \
   sudo
 RUN apt-get update && apt-get install -y libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libgconf-2-4 libnss3 libxss1 libasound2 libxtst6 xauth xvfb
 
-RUN apt-get update && apt-get install ca-certificates -y
-ADD ./certs/AmazonRootCA1.cer /usr/local/share/ca-certificates/AmazonRootCA1.cer
-ADD ./certs/squid-ca-cert.pem /usr/local/share/ca-certificates/squid-ca-cert.crt
 
-RUN /usr/sbin/update-ca-certificates
 
 
 RUN  mkdir /app
@@ -42,15 +38,7 @@ RUN chown -R brisk /home/brisk
 RUN usermod -d /home/brisk brisk
 
 
-## Our start command which kicks off
-## our newly created binary executable
-ADD ./certs /app/certs
-RUN chown -R brisk /app/certs
-RUN chmod -R 700 /app/certs
-# RUN npm install npm@latest -g && \
-#   npm install n -g && \
-#   n latest
-# RUN npm install --global yarn
+
 RUN chown -R brisk /usr/local/lib /usr/local/share/ /usr/local/bin/
 RUN adduser brisk sudo
 RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
@@ -84,12 +72,7 @@ ENV PATH $NVM_DIR/versions/node/v$NODE_VERSION/bin:$PATH
 RUN echo \. "$NVM_DIR/nvm.sh" >> /home/brisk/.bashrc
 RUN echo \. "$NVM_DIR/nvm.sh" >> /home/brisk/.bash_profile
 RUN echo \. "$NVM_DIR/nvm.sh" >> /home/brisk/.profile
-# confirm installation
-RUN curl -o  /usr/local/share/ca-certificates/moz-all.pem https://curl.se/ca/cacert.pem
-RUN cat /usr/local/share/ca-certificates/squid-ca-cert.crt >> /usr/local/share/ca-certificates/moz-all.pem
-RUN npm config set cafile /usr/local/share/ca-certificates/moz-all.pem
 
-RUN yarn config set cafile /usr/local/share/ca-certificates/moz-all.pem
 RUN node -v
 RUN npm -v
 
