@@ -122,7 +122,7 @@ services:
       DEV: "true"
     build:
       context: ../api
-      dockerfile: Dockerfile.dev
+      dockerfile: ../api/Dockerfile.dev
     deploy:
       restart_policy:
         condition: on-failure
