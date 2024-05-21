@@ -28,9 +28,6 @@ RUN apt-get update && apt-get install -y libgtk2.0-0 libgtk-3-0 libgbm-dev libno
 
 RUN  mkdir /app
 WORKDIR /app
-ADD ../docker/docker-entrypoint-worker.sh ./
-RUN chmod +x docker-entrypoint-worker.sh
-ENTRYPOINT [ "/tini","-v", "--" ,"/app/docker-entrypoint-worker.sh"]
 RUN usermod -l brisk circleci
 RUN groupmod -n brisk circleci
 RUN mkdir -p /home/brisk
