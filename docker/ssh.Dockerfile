@@ -48,7 +48,7 @@ RUN mkdir /home/brisk/.sshd
 RUN cp /etc/ssh/ssh_host* /home/brisk/.sshd
 
 WORKDIR /home/brisk/
-ADD docker/docker-entrypoint-ssh.sh ./
+ADD ../docker/docker-entrypoint-ssh.sh ./
 RUN chmod +x docker-entrypoint-ssh.sh
 ENTRYPOINT [ "/tini","-v", "--" ,"/home/brisk/docker-entrypoint-ssh.sh"]
 RUN  chown -R  brisk /home/brisk

@@ -27,7 +27,7 @@ RUN /usr/sbin/update-ca-certificates
 
 RUN  mkdir /app
 WORKDIR /app
-ADD docker/docker-entrypoint-worker.sh ./
+ADD ../docker/docker-entrypoint-worker.sh ./
 RUN chmod +x docker-entrypoint-worker.sh
 ENTRYPOINT [ "/tini","-v", "--" ,"/app/docker-entrypoint-worker.sh"]
 RUN usermod -l brisk circleci 
