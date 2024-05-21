@@ -1,0 +1,56 @@
+services:
+
+  super:
+    depends_on:
+      - super-setup
+    build:
+      context: ../
+      dockerfile: docker/super.Dockerfile
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - super-keys:/keys:rw
+      - super-app:/tmp/remote_dir:rw
+    init: true
+    ports:
+      - "50050:50050"
+      - "2222:2222"
+
+    # platform: linux/amd64            
+    environment:
+      BRISK_API: "api:9001"
+      MAX_WORKERS: 1
+      DEV: true
+      BRISK_DOMAIN_NAME: "brisktest.com"
+      BRISK_SUPER_PORT: "50050"
+      BRISK_USE_DOCKER_COMPOSE: true
+      BRISK_LOG_LEVEL: "debug"
+      SUPER_LOCAL_DIR: "/tmp/remote_dir/"
+      REMOTE_DIR: "/tmp/remote_dir/"
+      BRISK_PROJECT_RUN_TIMEOUT: "31m"
+      BRISK_COMMAND_TIMEOUT: "30m"
+      BRISK_RUNNER_COMMAND_TIMEOUT: "29m"
+    command: bash -c "rm -rf /tmp/remote_dir/* && rm -rf /tmp/.* && /app/super.bin"
+    sysctls:
+      - net.ipv4.tcp_keepalive_intvl=10
+      - net.ipv4.tcp_keepalive_probes=150
+      - net.ipv4.tcp_keepalive_time=10   
+
+  super-ssh:
+    image: brisktest/brisk-ssh:latest
+    network_mode: "service:super"
+    volumes:
+      - super-keys:/home/brisk/.ssh:rw
+      - super-app:/tmp/remote_dir:rw
+  super-setup:
+    image: busybox:latest
+    volumes:
+      - super-keys:/keys:rw
+      - super-app:/tmp/remote_dir:rw
+    command: "chown -R 3434:3434 /var/ /tmp/remote_dir/ /keys/ && chmod -R  +w /keys/ /var /tmp/remote_dir/ && rm -rf /tmp/remote_dir/* /keys/* /var/lib/bastion/*  "
+volumes:
+  super-keys:
+  super-app:
+
+
+  #adding bastion here so things work for supervisor although we are not using bastion here, instead connecting directly  
+

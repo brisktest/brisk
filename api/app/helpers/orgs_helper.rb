@@ -1,0 +1,2 @@
+module OrgsHelper
+end

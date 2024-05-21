@@ -1,0 +1,32 @@
+version: "3.6"
+services:
+  bastion:
+    image: binlab/bastion
+    container_name: bastion
+    hostname: bastion
+    restart: unless-stopped
+    expose:
+      - 22/tcp
+    ports:
+      - 22222:22/tcp
+    environment:
+      PUBKEY_AUTHENTICATION: "true"
+      GATEWAY_PORTS: "false"
+      PERMIT_TUNNEL: "false"
+      X11_FORWARDING: "false"
+      TCP_FORWARDING: "true"
+      AGENT_FORWARDING: "true"
+    volumes:
+      - $PWD/authorized_keys:/var/lib/bastion/authorized_keys:ro
+      - bastion:/usr/etc/ssh:rw
+    extra_hosts:
+      - docker-host:172.17.0.1
+    networks:
+      - bastion
+
+networks:
+  bastion:
+    driver: bridge
+
+volumes:
+  bastion:

@@ -1,0 +1,9 @@
+:timeout: 1
+:pidfile: tmp/sidekiq.pid
+production:
+  :concurrency: 5
+:queues:
+  - [high, 2]
+  - [low]
+  - [default, 1]
+  - [mailers]

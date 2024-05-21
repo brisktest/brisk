@@ -1,0 +1,158 @@
+
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+import  "api/shared_types.proto";
+
+option go_package = "./brisk-supervisor";
+
+// protoc  --go_out=.  --go_opt=paths=source_relative --go-grpc_out=. brisk-supervisor/brisk-supervisor.proto    --proto_path=./
+//after  need ot update brisk-supervisor/brisk-supervisor.pb.go
+// set 	api "brisk-supervisor/api"
+// to fix the import path
+// make sure the api exists first
+//protoc  --go_out=.  --go_opt=paths=source_relative --go-grpc_out=. api/brisk-api.proto api/shared_types.proto    --proto_path=./
+//bck-i-search: protoc_
+package brisksupervisor;
+
+service BriskSupervisor {
+  // Lock is used to lock the supervisor for the duration of the test run
+  // we wrap RunTests because we want to sync before we run tests
+  rpc Lock(LockRequest) returns (stream LockResponse) {}
+
+  rpc RunTests ( TestOption) returns (stream Output) {}
+  rpc Setup (TestOption) returns(response) {}
+}
+
+
+service CommandRunner {
+
+
+  rpc RunCommands (stream api.Command) returns (stream Output) {}
+  rpc Setup(TestOption) returns(response){}
+  rpc CheckBuild(CheckBuildMsg) returns(CheckBuildResp){}
+  // probably have some more for checking status and shit
+}
+
+message CheckBuildMsg {
+  Config config = 1;
+}
+
+message CheckBuildResp {
+  bool success = 1;
+  string message = 2;
+  string error = 3;
+}
+
+
+message identifier {
+  string commandRun = 1;
+}
+
+
+message Config {
+	repeated api.Command command =1 ;
+	repeated api.Command buildCommands =2;  
+  string listTestCommand = 3;
+  string preListTestCommand = 4;
+  string framework =	5;	
+  repeated string excludedFromSync = 6;
+  string workerImage = 7;
+  map<string, string> environment = 8;
+  int32  concurrency = 9;
+  bool splitByJUnit = 10;
+  repeated string orderedFiles = 11;
+  repeated string rebuildFilePaths = 12;
+  string githubRepo = 13;
+  string githubCommit = 14;
+  bool skipRecalcFiles = 15;
+  bool noFailFast = 16;
+  bool automaticSplitting = 17;
+
+	// LocalDirectory      string    `json:"localDirectory"`
+	// SuperLocalDirectory string    `json:"superLocalDirectory"`
+	// RemoteDirectory     string    `json:"remoteDirectory"`
+	// ExcludedFromSync    []string  `json:"excludedFromSync"`
+	// ProjectToken        string    `json:"projectToken"`
+	// ApiKey              string    `json:"apiKey"`
+	// ApiToken            string    `json:"apiToken"`
+	// ApiEndpoint         string    `json:"apiEndpoint"`
+	// ReconnectDelay      int       `json:"reconnectDelay"`
+}
+
+
+message TestOption {
+  string command = 1;
+  repeated string testFiles = 2;
+  UserDetails userDetails = 3;
+  repeated api.Command BuildCommands = 4;
+  repeated api.Command Commands = 5;
+  string PublicKey = 6;
+  Config Config = 7;
+  api.RepoInfo RepoInfo = 8;
+  
+}
+
+
+message UserDetails {
+  string api_token =1;
+  string api_key = 2;
+  string project_token = 3;
+  
+}
+message response {
+  bool value = 1 ;
+  string message =2 ;
+  string username =3;
+}
+// The request message containing the user's name.
+
+
+message BriskError {
+  string error =1 ;
+  string stringError =2;
+  string stdOut = 3;
+  string stdErr = 4;
+  int32 exitCode = 5;
+  string additionalMessage = 6;
+  bool fatal = 7;
+  string stackTrace = 8;
+}
+
+
+message Output {  
+  string response = 1;
+  string stdout = 2;
+  string stderr = 3;
+   //used to signal that a command has been finished so the client can send the next one
+   string control = 4;
+   int32 exitcode = 5;
+   int32 totalTestCount = 6;
+   int32 totalTestFail = 7;
+   int32 totalTestPass = 8;
+   int32 totalTestSkip = 9;
+   int32 totalTestError = 10; 
+   string jsonResults = 11;
+   BriskError BriskError= 12;
+   int32 cmdSqNum = 13;
+   Worker worker = 14;
+   string stage = 15;
+   api.Command command = 16;
+   google.protobuf.Timestamp created = 17;
+   api.ExecutionInfo executionInfo = 18;
+}
+
+
+
+message Worker {
+int32 number = 1;
+string uid = 2;
+}
+
+
+message LockRequest {}
+message LockResponse {
+  // I'm not planning on using this. If the stream is open it is locked.
+  bool locked = 1;
+  string message = 2;
+}

@@ -1,0 +1,18 @@
+name: Brisk CI
+on: [push]
+jobs:
+  Brisk-CI:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v3
+      - name: Install Brisk
+        uses: brisktest/setup-brisk@v1.1
+        with:
+          brisk_version: 'latest'
+          api_token: '${{ secrets.BRISK_APITOKEN }}'
+          api_key: '${{ secrets.BRISK_APIKEY }}'
+          config_file: 'brisk-ci.json'
+      - name: Run Brisk
+        run: brisk version && brisk

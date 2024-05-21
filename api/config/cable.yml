@@ -1,0 +1,10 @@
+development:
+  adapter: async
+
+test:
+  adapter: test
+
+production:
+  adapter: redis
+  url: <%= Rails.application.credentials.redis_url ||  "redis://localhost:6379/1"  %>
+  channel_prefix: brisk_frontend_production

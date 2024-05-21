@@ -1,0 +1,53 @@
+
+services:
+  api:
+    # command: sudo service ssh start && go run server/main.go
+    environment:
+      SECRET_KEY_BASE: "mOFzSSaXnkca0KhgDKLP7Luj78ZuWXR2AjuTqwl7UInI9awbRdxhmQ=="
+      GRUF_PORT: "9001"
+      GRUF_HOST: "0.0.0.0"
+      RAILS_ENV: "development"
+      RAILS_LOG_TO_STDOUT: "true"
+      DATABASE_URL: "postgresql://root:password@postgres:5432/brisk_frontend_development"
+      RAILS_LOG_LEVEL: debug
+      RAILS_MAX_THREADS: 1
+      DB_POOL: 5
+      STATEMENT_TIMEOUT: 90s      
+      BRISK_INSECURE: true
+      REDIS_URL: redis://redis:6379/0
+      DEV: "true"
+    build:
+      context: ../../brisk-frontend
+      dockerfile: Dockerfile.dev
+    deploy:
+      restart_policy:
+        condition: on-failure
+    platform: linux/amd64
+    ports:
+      - "9001:9001"
+    command: bash -c "bundle exec rails db:prepare && bundle exec gruf"
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+  postgres:
+    image: "postgres:16"
+    container_name: "postgres_dev"
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: my-database     
+    volumes:
+      - postgresdata:/var/lib/postgresql/data
+  
+
+
+volumes:
+  postgresdata:
+    driver: local
+# docker exec -it 0fb2a965516d bash
+# db:seed
+# bundle exec rails c
+# 

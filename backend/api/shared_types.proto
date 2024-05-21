@@ -1,0 +1,48 @@
+syntax = "proto3";
+package api;
+option go_package =  "./api";
+import "google/protobuf/timestamp.proto";
+message RepoInfo {
+    string CommitHash = 1;
+    string Repo = 2;
+    string Branch = 3;
+    string Tag = 4;
+    string CommitMessage = 5;
+    string CommitAuthor = 6;
+    string CommitAuthorEmail = 7;    
+    bool IsGitRepo = 8;
+  }
+
+  message ExecutionInfo {
+    google.protobuf.Timestamp started = 1;
+    google.protobuf.Timestamp finished = 2;
+    int32 exit_code = 3;
+    string rebuild_hash = 4;
+    Command command = 5;
+    string output = 6;
+  
+  
+  }
+
+
+  message Command {
+    string commandline = 1;
+    repeated string args = 2;
+    string workDirectory=3;
+    map<string, string> environment = 4;
+    bool isTestRun  = 5;
+    bool lastCommand = 6;
+    int32 sequenceNumber = 7;
+    int32 workerNumber = 8;
+    string stage = 9 ; 
+    // bool recalcFiles = 10;
+    bool isListTest  = 11;
+    string testFramework = 12;
+    bool background = 13; 
+    int32 totalWorkerCount = 14;
+    int32 commandConcurrency = 15;
+    bool noTestFiles = 16;
+    string commandId = 17;
+
+
+  }

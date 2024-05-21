@@ -1,0 +1,322 @@
+syntax = "proto3";
+import "google/protobuf/timestamp.proto";
+import  "api/shared_types.proto";
+//ruby
+//grpc_tools_ruby_protoc --ruby_out=./ --grpc_out=./ ./api/brisk-api.proto ./api/shared_types.proto
+// copy across
+// cp api/brisk-api.proto api/shared_types.proto ~/Programming/brisk-server/api/
+//go
+//protoc  --go_out=. --go_opt=paths=source_relative --go-grpc_out=. --go-grpc_opt=paths=source_relative api/sharedTypes.proto api/brisk-api.proto
+
+package api;
+option go_package = "./api";
+
+service Splitting {
+    rpc SplitForProject(SplitRequest) returns (SplitResponse) {}
+}
+message SplitRequest {
+    string alogorithm = 1;
+    int32   num_buckets = 2;
+    repeated string filenames = 3;        
+}
+
+message SplitResponse {
+    repeated TestFiles file_lists = 1;
+    string split_method = 2;
+}
+message TestFiles {
+    repeated string filenames = 1;
+}
+
+
+service Infra {
+    rpc RegisterMachine(MachineReq) returns (MachineResponse) {}
+    rpc DeRegisterMachine(MachineReq) returns (MachineResponse) {}
+    rpc DrainMachine(MachineReq) returns (MachineResponse) {}
+}
+
+message MachineReq {
+    Machine machine = 1;
+}
+message MachineResponse {
+    Machine machine = 1;
+}
+
+message Machine {
+    string ip_address = 1;
+    string port = 2;
+    string host_ip = 3;
+    string uid = 4;    
+    string os_info = 5;
+    string host_uid = 6;
+    string image = 7;
+    string type = 8;
+    string state = 9;
+    string region = 10;
+    uint32 cpus = 11;
+    // the int might be too small to hold the size of memory and disk
+    string memory = 12;
+    string disk = 13;
+    string json_data = 14;
+    uint32 id = 15;
+
+}
+
+service Users {
+
+    rpc Login(LoginRequest) returns (stream LoginResponse) {}
+    // rpc GetCredentials(GetCredentialsRequest) returns (GetCredentialsResponse) {}
+}
+
+// message GetCredentialsRequest {
+//     string nonce = 1 ;
+// }
+// message GetCredentialsResponse{
+//     string auth_token = 1 ;
+// }
+
+service Projects {
+    rpc LogRun(LogRunReq) returns (LogRunResp) {}
+    rpc FinishRun(FinishRunRequest) returns (FinishRunResponse) {}
+    rpc GetProject(GetProjectReq) returns (GetProjectResp) { }
+    // Get workers to run against
+    rpc GetWorkersForProject(GetWorkersReq) returns (GetWorkersResp) {}
+    rpc GetSuperForProject(GetSuperReq) returns (GetSuperResp) {}
+    // used when one of our workers fails
+    rpc GetAdditionalWorkersForProject(GetWorkersReq) returns (GetWorkersResp) {}
+    rpc ClearWorkersForProject(ClearWorkersReq) returns (ClearWorkersResp) {}
+    rpc DeRegisterWorkers(DeRegisterWorkersReq) returns (DeRegisterWorkersResp) {}
+    rpc InitProject(InitProjectReq) returns (InitProjectResp) {}
+
+    rpc GetAllProjects(GetAllProjectsReq) returns (GetAllProjectsResp) {}
+}
+message DeRegisterWorkersReq{
+    repeated Worker workers = 1;
+}
+message DeRegisterWorkersResp{
+    string status = 1;
+}
+message LogRunReq {
+    RunInfo worker_run_info =1;
+    Command command = 2;
+}
+
+message LogRunResp {
+    bool success = 1;
+}
+
+message GetAllProjectsReq {  
+    //not used at the moment
+    string filter = 1;
+}
+message GetAllProjectsResp {
+    repeated Project projects = 1;
+    string message = 2;
+}
+message InitProjectReq {
+    // one of the following: rails, node, shell
+    string framework = 1 ;
+}
+
+message InitProjectResp {
+    Project project = 1 ;
+    string status = 2 ;
+}
+
+service Workers {
+    rpc Finished(WorkerReq) returns (WorkerResponse) {}
+    rpc BuildCommandsRun(CommandsRunReq) returns (WorkerResponse) {}
+    rpc Register(WorkerRegReq) returns (WorkerResponse) {}
+    rpc DeRegister(WorkerReq) returns (WorkerResponse) {}
+    rpc GetRecentlyDeregistered(WorkersReq) returns (WorkersResp){}
+}
+service Supers {
+    rpc Finished(SuperReq) returns (SuperResponse) {}
+    rpc Register(SuperRegReq) returns (SuperResponse) {}
+    rpc DeRegister(SuperReq) returns (SuperResponse) {}
+    rpc MarkSuperAsUnreachable(UnreacheableReq) returns (UnreachableResp) {}
+    rpc RecordSetup(SuperReq) returns (SuperResponse) {}
+
+}
+
+
+message WorkerRegReq {
+    string ip_address =1;    
+    string port = 2;
+    string host_ip = 3;
+    string uid = 4;
+    string worker_image = 5;
+    string host_uid = 6;
+    string sync_port = 7;
+}
+
+
+message UnreacheableReq {
+    Super super = 1;
+    string projectToken = 2;
+}
+message UnreachableResp {
+    Super super = 1;
+
+}
+message WorkersReq {}
+message WorkersResp {
+    repeated Worker workers =1 ;
+}
+message SuperRegReq {
+    string ip_address =1;    
+    string port = 2;
+    string host_ip = 3;
+    string sync_port = 4;
+    string external_endpoint =5;
+    string sync_endpoint = 6;
+    string uid = 7;
+    string host_uid = 8;
+}
+message WorkerReq {
+    string uid = 1 ;    
+}
+message ClearWorkersReq {
+    string supervisor_uid = 1;
+}
+message ClearWorkersResp {
+    string status = 1;
+}
+message SuperReq {
+    uint64 id = 1 ;    
+}
+message SuperResponse {
+    Super super = 1;    
+}
+message CommandsRunReq {
+    uint64 id = 1;
+}
+message WorkerResponse {
+    Worker worker = 1; 
+}
+message GetWorkersReq {
+    uint64 num_workers = 2;
+    string worker_image = 3;
+    string supervisor_uid = 4;
+    string rebuild_hash = 5;
+    RepoInfo repo_info = 6;
+    string log_uid = 7;
+}
+message GetWorkersResp {
+    repeated Worker workers =1 ;
+    uint32 jobrun_id = 2;
+    string jobrun_link = 3;
+}
+message GetSuperReq {
+    string project_token = 1;    
+    string unique_instance_id = 2;
+    // this loosely corresponds to branch name
+    string affinity = 3;
+}
+message GetSuperResp {
+    Super super =1 ;
+}
+
+message Super {
+    string ip_address = 1;
+    string port = 2;
+    string state  = 4;
+    string endpoint  = 5;
+    uint64 id = 6;
+    string sync_port = 7;
+    string sync_endpoint = 8;
+    string external_endpoint = 9;
+    string uid = 10;
+    string setup_run_at = 11;
+
+} 
+message Worker {
+    string ip_address = 1;
+    string port = 2;
+    google.protobuf.Timestamp build_commands_run_at = 3;
+    string state  = 4;
+    string endpoint  = 5;
+    uint64 id = 6;
+    string uid = 7;
+    string host_ip=8;
+    string worker_image = 9 ;
+    string host_uid = 10;
+    string sync_port = 11;
+} 
+
+message Project {
+    string name = 1;
+    string project_token = 2;
+    string username = 3;
+    uint64 org_id = 4;
+    uint64 user_id = 5;
+    uint64 id = 6;
+    uint64 concurrency = 7;
+    string framework =  8;
+    string image = 9;
+}
+
+
+message GetProjectReq {
+
+}
+message FinishRunRequest {
+    int32 exit_code = 1;
+    int32 jobrun_id = 2;
+    string output = 4;
+    string error = 5;
+    JobRunStatus status = 6;
+    string supervisor_uid = 7;
+    repeated RunInfo worker_run_info  = 8; 
+    int32 final_worker_count = 9 ; 
+    repeated Worker sync_failed_workers = 10;         
+}
+
+
+
+enum JobRunStatus {
+    completed = 0;
+    failed = 1;
+}
+
+message RunInfo {
+    uint32 worker_id =1;;
+    string rebuild_hash = 2;
+    string exit_code = 3;
+    string output = 4;
+    google.protobuf.Timestamp finished_at = 5;
+    google.protobuf.Timestamp started_at = 6;
+    string error = 7;
+    repeated string files = 8;
+    string uid = 9;
+    string log_encryption_key = 10;
+    string log_location = 11;
+    uint32 jobrun_id = 12;
+    repeated ExecutionInfo execution_infos = 13;
+}
+
+message FinishRunResponse {
+    string state = 1;
+    string error = 2;
+}
+
+message GetProjectResp {
+   Project project = 1;   
+}
+
+message LoginRequest {
+    string nonce = 1;
+}
+
+message LoginResponse {
+    string url = 1;
+    string description = 2;
+    string status = 3;
+    Credentials credentials = 4;
+}
+
+message Credentials {
+    string api_token = 1;
+    string api_key = 2;
+    
+}

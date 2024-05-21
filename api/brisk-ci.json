@@ -1,0 +1,50 @@
+{
+  "commands": [
+    {
+      "commandline": "rspec --format progress --format json"
+    }
+  ],
+  "preSyncCommands": [],
+  "buildCommands": [
+    {
+      "commandline": "rvm install 'ruby-3.1.0' && rvm use 'ruby-3.1.0' "
+    }
+    ,
+    {
+      "commandline": "sudo chown -R brisk /docker-socket/"
+    },
+
+
+    {
+      "commandline": " docker-compose build --parallel "
+    },
+    {
+      "commandline": "docker-compose up -d db redis"
+    },
+    {
+      "commandline": "yarn install"
+    },
+    {
+      "commandline": "bundle install"
+    },
+
+    {
+      "commandline": " bundle exec rake db:test:prepare"
+    }
+  ],
+  "excludedFromSync": ["log/", ".git/", "node_modules/", ".git", "tmp/", ".env"],
+  "excludedFromWatch": ["log/", ".git/", "node_modules", "tmp/", "brisk.json"],
+  "rebuildFilePaths" :["Gemfile", "Gemfile.lock"],
+  "environment": {
+    "DATABASE_URL": "postgres://postgres:example@127.0.0.1:5432",
+    "RAILS_ENV": "test",
+    "HTTP_PROXY": ""
+  },
+  "projectToken": "KCrbheGh7J",
+
+  "listTestCommand": " bundle exec rspec --dry-run --format json",
+  "framework": "Rspec",
+  "image": "rails",
+  "concurrency": 1
+
+}

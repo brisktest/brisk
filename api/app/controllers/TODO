@@ -1,0 +1,42 @@
+
+
+
+
+BRISK_PROJECTTOKEN
+BRISK_APITOKEN
+BRISK_APIKEY 
+BRISK_CONCURRENCY used to overide the concurrency in project file
+BRISK_TELEMETRY_ENABLED (default true)
+BRISK_CI (default false)
+
+
+BRISK_PROJECT_CONFIG_FILE
+defaults to brisk.json in current directory
+
+BRISK_CREDENTIALS_CONFIG
+defaults to "config.toml" (will search in current directory for file and $HOME/.config/brisk/)
+
+BRISK_NO_TERM
+do not assume a terminal
+
+BRISK_WATCH (default true)
+Enter watch mode
+
+BRISK_PROJECT_IN_USE_TIMEOUT (default 30 seconds)
+BRISK_PRINT_KEYS (default true)
+BRISK_NOREBUILD (default false) 
+never rebuild the project 
+
+BRISK_HASHFILEPATH (default .rebuild_hash)
+Path to the hash file for rebuilding
+
+BRISK_REBUILDWATCHPATHS 
+Comma separated list of paths to watch for rebuilds
+
+
+
+BRISK_APIENDPOINT (default api.brisktest.com:50052)
+
+BRISK_LOG_LEVEL (default error)
+log file is 
+/tmp/brisk.log

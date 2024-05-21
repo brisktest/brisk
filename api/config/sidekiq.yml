@@ -1,0 +1,18 @@
+:queues:
+  - [default, 1]
+  - [mailers, 1]
+  - [low, 1]
+  - [high, 1]
+  - [critical, 1]
+  - [test_splitter, 1]
+:scheduler:
+  :schedule:
+    release_old_workers:
+      cron: '0 * * * * *'   # Runs once per minute
+      class: ReleaseOldWorkersJob        
+    cleanup_jobruns:
+      cron: '30 * * * * *'   # Runs once per minute
+      class: CleanupJobrunsJob
+    finish_machines:
+      cron: '0 */30 * * * *'   # Runs at 15 and 45 minutes past the hour
+      class: FinishMachinesJob
