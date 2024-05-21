@@ -14,8 +14,7 @@ services:
     ports:
       - "50050:50050"
       - "2222:2222"
-
-    # platform: linux/amd64            
+        
     environment:
       BRISK_API: "api:9001"
       MAX_WORKERS: 1
@@ -47,10 +46,105 @@ services:
       - super-keys:/keys:rw
       - super-app:/tmp/remote_dir:rw
     command: "chown -R 3434:3434 /var/ /tmp/remote_dir/ /keys/ && chmod -R  +w /keys/ /var /tmp/remote_dir/ && rm -rf /tmp/remote_dir/* /keys/* /var/lib/bastion/*  "
+
+
+  worker:
+    depends_on:
+      - worker-setup
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - worker-keys:/keys
+      - worker-app:/tmp/remote_dir
+    init: true
+    deploy:
+      restart_policy:
+        condition: on-failure
+        delay: 10s
+        max_attempts: 10
+        window: 120s
+    environment:
+      BRISK_API: "api:9001"
+      DEV: "true"
+      BRISK_USE_DOCKER_COMPOSE: "true"
+      BRISK_SELF_REGISTER: "true"
+      WORKER_IMAGE: "node-lts"
+      TINI_SUBREAPER: "true"
+      PUBLIC_KEY_FILE: "/keys/authorized_keys"
+      REMOTE_DIR: "/tmp/remote_dir/" 
+      RUNNER_COMMAND_TIMEOUT: "30m"   
+    platform: linux/amd64      
+    build:
+      context: ../
+      dockerfile: docker/worker-node-lts.Dockerfile
+    sysctls:
+      - net.ipv4.tcp_keepalive_intvl=10
+      - net.ipv4.tcp_keepalive_probes=150
+      - net.ipv4.tcp_keepalive_time=10  
+  worker-ssh: 
+    image: brisktest/brisk-ssh:latest
+    network_mode: "service:worker"
+    platform: linux/amd64
+    environment:
+      - PGID=3434
+      - PUID=3434
+    volumes:
+      - worker-keys:/home/brisk/.ssh
+      - worker-app:/tmp/remote_dir 
+  worker-setup:
+    image: busybox:latest
+    volumes:
+      - worker-keys:/keys      
+      - worker-app:/tmp/remote_dir   
+    command: sh -c "chown -R 3434:3434 /var/ /tmp/remote_dir/ /keys/  && chmod -R  +w /keys/ /var /tmp/remote_dir/ && rm -rf /tmp/remote_dir/* /keys/* /var/lib/bastion/* "         
+
+  api:
+    # command: sudo service ssh start && go run server/main.go
+    environment:
+      SECRET_KEY_BASE: "mOFzSSaXnkca0KhgDKLP7Luj78ZuWXR2AjuTqwl7UInI9awbRdxhmQ=="
+      GRUF_PORT: "9001"
+      GRUF_HOST: "0.0.0.0"
+      RAILS_ENV: "development"
+      RAILS_LOG_TO_STDOUT: "true"
+      DATABASE_URL: "postgresql://root:password@postgres:5432/brisk_frontend_development"
+      RAILS_LOG_LEVEL: debug
+      RAILS_MAX_THREADS: 1
+      DB_POOL: 5
+      STATEMENT_TIMEOUT: 90s      
+      BRISK_INSECURE: true
+      REDIS_URL: redis://redis:6379/0
+      DEV: "true"
+    build:
+      context: ../../brisk-frontend
+      dockerfile: Dockerfile.dev
+    deploy:
+      restart_policy:
+        condition: on-failure
+    platform: linux/amd64
+    ports:
+      - "9001:9001"
+    command: bash -c "bundle exec rails db:prepare && bundle exec gruf"
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+  postgres:
+    image: "postgres:16"
+    container_name: "postgres_dev"
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: my-database     
+    volumes:
+      - postgresdata:/var/lib/postgresql/data
+  
+
+
 volumes:
+  postgresdata:
+    driver: local
   super-keys:
+  worker-keys:  
   super-app:
-
-
-  #adding bastion here so things work for supervisor although we are not using bastion here, instead connecting directly  
-
+  worker-app:
