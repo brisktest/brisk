@@ -827,10 +827,16 @@ func listenForHealthCheck(ctx context.Context, port string) (func(), error) {
 
 func listenOn(ctx context.Context, port string) (func(), error) {
 
-	tlsCredentials, err := LoadTLSCredentials()
-	if err != nil {
-		Logger(ctx).Errorf("cannot load TLS credentials: %v ", err)
-		shared.SafeExit(err)
+	serverOpts := []grpc.ServerOption{}
+	if !IsDev() {
+		tlsCredentials, err := LoadTLSCredentials()
+		if err != nil {
+			Logger(ctx).Errorf("cannot load TLS credentials: %v ", err)
+			shared.SafeExit(err)
+		} else {
+			serverOpts = append(serverOpts, grpc.Creds(tlsCredentials))
+
+		}
 	}
 	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
@@ -850,19 +856,17 @@ func listenOn(ctx context.Context, port string) (func(), error) {
 		Time:                  2 * time.Second,  // Ping the client if it is idle for 2 seconds to ensure the connection is still active
 		Timeout:               1 * time.Second,  // Wait 1 second for the ping ack before assuming the connection is dead
 	}
-
-	// we would like to only allow 1 concurrent stream per connection - but healthcheck messes with that
-	s := grpc.NewServer(
-		// grpc.MaxConcurrentStreams(1),
-		grpc.KeepaliveEnforcementPolicy(kaep), grpc.KeepaliveParams(kasp),
-		grpc.Creds(tlsCredentials),
+	serverOpts = append(serverOpts, grpc.KeepaliveEnforcementPolicy(kaep))
+	serverOpts = append(serverOpts, grpc.KeepaliveParams(kasp))
+	serverOpts = append(serverOpts,
 		grpc.ChainUnaryInterceptor(grpcotel.UnaryServerInterceptor(otelgrpc.WithInterceptorFilter(
 			filters.Not(
 				filters.HealthCheck(),
 			),
 		),
-		), grpc_auth.UnaryServerInterceptor(DoAuth)),
+		), grpc_auth.UnaryServerInterceptor(DoAuth)))
 
+	serverOpts = append(serverOpts,
 		grpc.ChainStreamInterceptor(
 			grpcotel.StreamServerInterceptor(otelgrpc.WithInterceptorFilter(
 				filters.Not(
@@ -877,6 +881,10 @@ func listenOn(ctx context.Context, port string) (func(), error) {
 			//grpc_zap.StreamServerInterceptor(zapLogger),
 			grpc_auth.StreamServerInterceptor(DoAuth),
 		))
+
+	s := grpc.NewServer(
+		serverOpts...,
+	)
 
 	pb.RegisterCommandRunnerServer(s, &server{})
 	// grpc_prometheus.Register(s)
