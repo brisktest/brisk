@@ -1,3 +1,4 @@
 gon-sign.hcl.tmp
 public/
 codesign/
+./brisk-cli
