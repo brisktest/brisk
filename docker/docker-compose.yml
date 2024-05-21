@@ -11,7 +11,7 @@ services:
     depends_on:
       - super-setup
     build:
-      context: ./core
+      context: ../core
       dockerfile: docker/super.Dockerfile
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -81,7 +81,7 @@ services:
       RUNNER_COMMAND_TIMEOUT: "30m"   
     platform: linux/amd64      
     build:
-      context: ./core
+      context: ../core
       dockerfile: docker/worker-node-lts.Dockerfile
     sysctls:
       - net.ipv4.tcp_keepalive_intvl=10
@@ -121,7 +121,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       DEV: "true"
     build:
-      context: ./api
+      context: ../api
       dockerfile: Dockerfile.dev
     deploy:
       restart_policy:
