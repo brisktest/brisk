@@ -81,15 +81,6 @@ RUN sudo curl -sSL https://get.rvm.io | bash -s
 # RUN rvm get stable --auto-dotfiles
 RUN rvm install 3.0.2
 
-
-
-
-
-RUN curl -o  /usr/local/share/ca-certificates/moz-all.pem https://curl.se/ca/cacert.pem
-RUN cat /usr/local/share/ca-certificates/squid-ca-cert.crt >> /usr/local/share/ca-certificates/moz-all.pem
-RUN npm config set cafile /usr/local/share/ca-certificates/moz-all.pem
-RUN yarn config set cafile /usr/local/share/ca-certificates/moz-all.pem
-
 RUN node -v
 RUN npm -v
 
