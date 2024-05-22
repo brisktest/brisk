@@ -43,7 +43,8 @@ Examples include Github Actions, CircleCI, Bitbucket, AWS etc.
 Brisk consistes of a CLI program that talks to a an API and a dedicated supervisor (running in the cloud) which splits tests among many workers.
 In production the CLI is the only componenet that runs locally (or in your CI Pipeline), everything else runs in the cloud. 
 
-![brisk-arch drawio](https://github.com/brisktest/brisk/assets/405820/3dd8c99d-ff1d-40d6-9d77-56c56f95da99)
+![brisk-arch-white drawio](https://github.com/brisktest/brisk/assets/405820/3ab5148b-49d6-4cb8-a48e-7eaae7174558)
+
 
 # DEV mode
 
