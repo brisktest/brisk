@@ -38,6 +38,10 @@ https://docs.brisktest.com/
 
 Examples include Github Actions, CircleCI, Bitbucket, AWS etc.
 
+These docs cover using the CLI as a client and include everything about configuring brisk.json, using the CLI and setting up your build. 
+
+We refer you to these docs for using the brisk client, for setting up and running the backend this repo is the main source of documentation. 
+
 # Brisk High Level Architecture
 
 Brisk consistes of a CLI program that talks to a an API and a dedicated supervisor (running in the cloud) which splits tests among many workers.
