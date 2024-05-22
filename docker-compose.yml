@@ -14,6 +14,7 @@
 services:
   super:
     depends_on:
+      - api
       - super-setup
     build:
       context: ./core
@@ -62,6 +63,7 @@ services:
 
   worker:
     depends_on:
+      - api
       - worker-setup
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
