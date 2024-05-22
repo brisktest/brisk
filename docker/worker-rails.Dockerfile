@@ -26,11 +26,6 @@ RUN apt-get update -q && \
 
 
 
-RUN apt-get update && apt-get install ca-certificates -y
-ADD ./certs/AmazonRootCA1.cer /usr/local/share/ca-certificates/AmazonRootCA1.cer
-ADD ./certs/squid-ca-cert.pem /usr/local/share/ca-certificates/squid-ca-cert.crt
-
-RUN /usr/sbin/update-ca-certificates
 
 RUN  mkdir /app
 WORKDIR /app
@@ -51,10 +46,6 @@ COPY --from=worker-builder /src/build/worker.bin ./
 
 RUN  chmod +u worker.bin
 
-
-ADD ./certs /app/certs
-RUN chown -R brisk /app/certs
-RUN chmod -R 700 /app/certs
 
 RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add -
 RUN sh -c 'echo "deb [arch=$(dpkg --print-architecture)] https://dl-ssl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
