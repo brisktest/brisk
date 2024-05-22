@@ -1,6 +1,8 @@
 # Welcome
 
-This repository contains the code required to run Brisk so you can host your own complete CI system.
+This repository contains the code required to run Brisk so you can host your own complete CI system. 
+
+If you would prefer to use a hosted service instead of hosting your own CI system, check our hosted service at https://brisktest.com/.
 
 Brisk is an extremely fast CI system, based around not rebuilding your environment on each test run. This allows us to really get the most from multiple workers. Instead of losing minutes rebuilding the environment on each run we instead can have the workers go straigth to work running tests. This dramatically shortens the total time a test run takes. With enough workers the speed of your longest test becomes the limit for how long your CI tests take. 
 
