@@ -18,7 +18,7 @@ docker compose up
 
 # The CLI
 
-In order to access Brisk from your project directory (where the source code you are trying to test lives) you'll need to use the CLI. You can download a prebuilt build from (https://docs.brisktest.com/docs/installation) or you can build the cli from this repo. 
+In order to access Brisk from your project directory (where the source code you are trying to test lives) you'll need to use the CLI. You can download a prebuilt build from https://docs.brisktest.com/docs/installation or you can build the cli from this repo. 
 
 In order to build the CLI you cd to 
 
@@ -32,7 +32,7 @@ and execute ./build-debug to build a version for your system.
 
 Complete guides with information for setting up Brisk to work with your CI system and workflow are available at
 
-(https://docs.brisktest.com/)
+https://docs.brisktest.com/
 
 Examples include Github Actions, CircleCI, Bitbucket, AWS etc.
 
