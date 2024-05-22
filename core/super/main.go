@@ -71,6 +71,7 @@ import (
 	"go.opentelemetry.io/otel"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/status"
 
@@ -1357,21 +1358,30 @@ func createConnectionToWorkerNoRetry(ctx context.Context, worker *api.Worker, co
 	}
 	ctx = AddIntendedAllocIdTo(ctx, worker.Uid)
 
-	Logger(ctx).Debugf("Connecting to endpoint %v", endpoint)
-	tlsConfig := &tls.Config{
-		//we aren't running a certificate authority so we need to disable this
-		//this traffic is also internal so we don't need to worry about it being MITM'd
-		InsecureSkipVerify: true,
+	var dialOpt grpc.DialOption
+	if IsDev() {
+		dialOpt = grpc.WithTransportCredentials(insecure.NewCredentials())
+	} else {
+		tlsConfig := &tls.Config{
+			//we aren't running a certificate authority so we need to disable this
+			//this traffic is also internal so we don't need to worry about it being MITM'd
+			InsecureSkipVerify: true,
+		}
+		dialOpt = grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))
 	}
+
+	Logger(ctx).Debugf("Connecting to endpoint %v", endpoint)
 
 	conn, err := grpc.DialContext(ctx, endpoint,
 		grpc.WithChainStreamInterceptor(otelgrpc.StreamClientInterceptor(), BugsnagClientInterceptor()),
 		grpc.WithChainUnaryInterceptor(otelgrpc.UnaryClientInterceptor(), BugsnagClientUnaryInterceptor),
-		grpc.WithDefaultCallOptions(), grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)), grpc.WithBlock(), grpc.WithTimeout(1000*time.Millisecond),
+		grpc.WithDefaultCallOptions(), grpc.WithBlock(), grpc.WithTimeout(1000*time.Millisecond),
 		grpc.WithKeepaliveParams(keepalive.ClientParameters{
 			Time:    30 * time.Second,
 			Timeout: 5 * time.Second,
-		}))
+		}),
+		dialOpt,
+	)
 
 	if err != nil {
 		return nil, err
@@ -1413,20 +1423,18 @@ func connectToServer(ctx context.Context, files []string, requests []api.Command
 
 	Logger(ctx).Debugf("the files we have are of length %v", len(files))
 	Logger(ctx).Debugf("Connecting to endpoint %v", endpoint)
-	tlsConfig := &tls.Config{
-		//we aren't running a certificate authority so we need to disable this
-		//this traffic is also internal so we don't need to worry about it being MITM'd
-		InsecureSkipVerify: true,
-	}
 
-	// opts := []grpc_retry.CallOption{
-	// 	grpc_retry.WithBackoff(grpc_retry.BackoffExponential(100 * time.Millisecond)),
-	// 	grpc_retry.WithMax(5),
-	// 	grpc_retry.WithOnRetryCallback(func(ctx context.Context, attempt uint, err error) {
-	// 		Logger(ctx).Errorf("retrying after error: %v attempt # %v", err, attempt)
-	// 	}),
-	// }
-	// grpc.UseCompressor(gzip.Name)
+	var dialOpt grpc.DialOption
+
+	if IsDev() {
+		dialOpt = grpc.WithTransportCredentials(insecure.NewCredentials())
+	} else {
+		tlsConfig := &tls.Config{
+			//we aren't running a certificate authority so we need to disable this
+			InsecureSkipVerify: true,
+		}
+		dialOpt = grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))
+	}
 
 	startConn := time.Now()
 	connectCount := 5
@@ -1441,7 +1449,7 @@ func connectToServer(ctx context.Context, files []string, requests []api.Command
 			grpc.WithChainStreamInterceptor(otelgrpc.StreamClientInterceptor(), BugsnagClientInterceptor()),
 			grpc.WithChainUnaryInterceptor(otelgrpc.UnaryClientInterceptor(), BugsnagClientUnaryInterceptor),
 			grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(size)),
-			grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)), grpc.WithBlock(),
+			dialOpt, grpc.WithBlock(),
 			grpc.WithKeepaliveParams(keepalive.ClientParameters{
 				Time:    10 * time.Second,
 				Timeout: 5 * time.Second,
