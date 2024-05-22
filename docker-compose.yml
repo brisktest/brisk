@@ -1,10 +1,15 @@
 # once docker compose is running, you can run the following commands to seed the database and run the rails console
-# docker exec -it docker-api-1 rails db:seed
-# this creates the correct api routes and user data
+
+# docker exec -it brisk-api-1 rails db:prepare db:seed
+
+# this creates the correct api routes and user data (credentials etc)
 
 # to run brisk against the services in this docker-compose file, you can run the following command:
 # BRISK_NO_BASTION=true BRISK_CONFIG_WARNINGS=true BRISK_APITOKEN=AfzWBMS8oy BRISK_APIKEY=dYho0h93lNfD/u/P  BRISK_DEV=true BRISK_APIENDPOINT=localhost:9001  brisk
 # if you want to run a local version of brisk you can build that in core/brisk-cli (using the buidl-debug.sh script) and replace the brisk command with PATH_TO_THIS_REPO/core/brisk-cli/brisk-cli in the command above 
+
+# create a project in the current directory
+# BRISK_NO_BASTION=true BRISK_CONFIG_WARNINGS=true BRISK_APITOKEN=AfzWBMS8oy BRISK_APIKEY=dYho0h93lNfD/u/P  BRISK_DEV=true BRISK_APIENDPOINT=localhost:9001  brisk project init node
 
 services:
   super:

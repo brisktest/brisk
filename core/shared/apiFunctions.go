@@ -173,6 +173,12 @@ func SetupWorker(ctx context.Context, w *api.Worker, publicKey string) error {
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: true,
 	}
+	var dialOpts grpc.DialOption
+	if IsDev() {
+		dialOpts = grpc.WithTransportCredentials(insecure.NewCredentials())
+	} else {
+		dialOpts = grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))
+	}
 	workerSetupTimeout := viper.GetDuration("WORKER_SETUP_TIMEOUT")
 	ctx, cancel := context.WithTimeout(ctx, workerSetupTimeout)
 	defer cancel()
@@ -187,7 +193,7 @@ func SetupWorker(ctx context.Context, w *api.Worker, publicKey string) error {
 	conn, err := grpc.DialContext(ctx, endpoint,
 		grpc.WithChainStreamInterceptor(otelgrpc.StreamClientInterceptor(), grpc_retry.StreamClientInterceptor(opts...), BugsnagClientInterceptor()),
 		grpc.WithChainUnaryInterceptor(otelgrpc.UnaryClientInterceptor(), grpc_retry.UnaryClientInterceptor(opts...), BugsnagClientUnaryInterceptor),
-		grpc.WithDefaultCallOptions(), grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)), grpc.WithBlock())
+		grpc.WithDefaultCallOptions(), dialOpts, grpc.WithBlock())
 
 	if err != nil {
 		if status, ok := status.FromError(err); ok {
