@@ -234,7 +234,7 @@ func executeCommandStream(commandChan chan *api.Command, ctx context.Context, er
 		commandNumber := in.SequenceNumber
 		Logger(ctx).Debugf("Command sequence number is %v", commandNumber)
 
-		var resultsFilename = fmt.Sprintf("/test-output/test-run-%v", time.Now().Unix())
+		var resultsFilename = fmt.Sprintf("/tmp/test-output-test-run-%v", time.Now().Unix())
 		command, commandErr := setCommand(in, ctx, resultsFilename, errChan)
 
 		if commandErr != nil {
