@@ -47,6 +47,8 @@ We refer you to these docs for using the brisk client, for setting up and runnin
 Brisk consistes of a CLI program that talks to a an API and a dedicated supervisor (running in the cloud) which splits tests among many workers.
 In production the CLI is the only componenet that runs locally (or in your CI Pipeline), everything else runs in the cloud. 
 
+The following diagram shows a simple high level view of the architecture. In a production system we would expect more load balancers, bastion hosts, data stores and other infrastructure.
+
 ![brisk-arch-white drawio](https://github.com/brisktest/brisk/assets/405820/3ab5148b-49d6-4cb8-a48e-7eaae7174558)
 
 
