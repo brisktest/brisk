@@ -1360,6 +1360,7 @@ func createConnectionToWorkerNoRetry(ctx context.Context, worker *api.Worker, co
 
 	var dialOpt grpc.DialOption
 	if IsDev() {
+		Logger(ctx).Debug("Connecting to endpoint with insecure connection in DEV mode")
 		dialOpt = grpc.WithTransportCredentials(insecure.NewCredentials())
 	} else {
 		tlsConfig := &tls.Config{
@@ -1373,6 +1374,7 @@ func createConnectionToWorkerNoRetry(ctx context.Context, worker *api.Worker, co
 	Logger(ctx).Debugf("Connecting to endpoint %v", endpoint)
 
 	conn, err := grpc.DialContext(ctx, endpoint,
+		dialOpt,
 		grpc.WithChainStreamInterceptor(otelgrpc.StreamClientInterceptor(), BugsnagClientInterceptor()),
 		grpc.WithChainUnaryInterceptor(otelgrpc.UnaryClientInterceptor(), BugsnagClientUnaryInterceptor),
 		grpc.WithDefaultCallOptions(), grpc.WithBlock(), grpc.WithTimeout(1000*time.Millisecond),
@@ -1380,7 +1382,6 @@ func createConnectionToWorkerNoRetry(ctx context.Context, worker *api.Worker, co
 			Time:    30 * time.Second,
 			Timeout: 5 * time.Second,
 		}),
-		dialOpt,
 	)
 
 	if err != nil {
