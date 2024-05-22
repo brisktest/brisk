@@ -111,6 +111,56 @@ services:
       - worker-app:/tmp/remote_dir   
     command: sh -c "chown -R 3434:3434 /var/ /tmp/remote_dir/ /keys/  && chmod -R  +w /keys/ /var /tmp/remote_dir/ && rm -rf /tmp/remote_dir/* /keys/* /var/lib/bastion/* "         
 
+  worker-rails:
+      depends_on:
+        - api
+        - worker-rails-setup
+      volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - worker-keys:/keys
+        - worker-rails-app:/tmp/remote_dir
+      init: true
+      deploy:
+        restart_policy:
+          condition: on-failure
+          delay: 10s
+          max_attempts: 10
+          window: 120s
+      environment:
+        BRISK_API: "api:9001"
+        DEV: "true"
+        BRISK_USE_DOCKER_COMPOSE: "true"
+        BRISK_SELF_REGISTER: "true"
+        WORKER_IMAGE: "node-lts"
+        TINI_SUBREAPER: "true"
+        PUBLIC_KEY_FILE: "/keys/authorized_keys"
+        REMOTE_DIR: "/tmp/remote_dir/" 
+        RUNNER_COMMAND_TIMEOUT: "30m"   
+      platform: linux/amd64      
+      build:
+        context: ./core
+        dockerfile: ../docker/worker-rails.Dockerfile
+      sysctls:
+        - net.ipv4.tcp_keepalive_intvl=10
+        - net.ipv4.tcp_keepalive_probes=150
+        - net.ipv4.tcp_keepalive_time=10  
+  worker-rails-ssh: 
+    image: brisktest/brisk-ssh:latest
+    network_mode: "service:worker-rails"
+    platform: linux/amd64
+    environment:
+      - PGID=3434
+      - PUID=3434
+    volumes:
+      - worker-keys:/home/brisk/.ssh
+      - worker-rails-app:/tmp/remote_dir 
+  worker-rails-setup:
+    image: busybox:latest
+    volumes:
+      - worker-keys:/keys      
+      - worker-rails-app:/tmp/remote_dir   
+    command: sh -c "chown -R 3434:3434 /var/ /tmp/remote_dir/ /keys/  && chmod -R  +w /keys/ /var /tmp/remote_dir/ && rm -rf /tmp/remote_dir/* /keys/* /var/lib/bastion/* "         
+
   api:
     # command: sudo service ssh start && go run server/main.go
     environment:
@@ -162,3 +212,4 @@ volumes:
   worker-keys:  
   super-app:
   worker-app:
+  worker-rails-app:
