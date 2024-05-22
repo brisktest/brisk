@@ -131,7 +131,7 @@ services:
         DEV: "true"
         BRISK_USE_DOCKER_COMPOSE: "true"
         BRISK_SELF_REGISTER: "true"
-        WORKER_IMAGE: "node-lts"
+        WORKER_IMAGE: "rails"
         TINI_SUBREAPER: "true"
         PUBLIC_KEY_FILE: "/keys/authorized_keys"
         REMOTE_DIR: "/tmp/remote_dir/" 
