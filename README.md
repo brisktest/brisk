@@ -1,16 +1,14 @@
 Brisk
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ===
-![logo-reversed-color-rgb](https://github.com/brisktest/brisk/assets/405820/73e18bb2-0e11-4a8e-8465-b9a7fc9cbabc)
 
-<rect width="100%"  height="80"  fill="white">
   
 <p align="center" style="text-align:center;">
 <a href="https://brisktest.com">
-<img alt="Brisk logo" src="https://github.com/brisktest/brisk/assets/405820/b15423d7-3704-4b3a-9b95-963d74e83a6e" width="500" />
+<!-- <img alt="Brisk logo" src="https://github.com/brisktest/brisk/assets/405820/b15423d7-3704-4b3a-9b95-963d74e83a6e" width="500" /> -->
+  <img alt="Brisk Logo" src="https://github.com/brisktest/brisk/assets/405820/73e18bb2-0e11-4a8e-8465-b9a7fc9cbabc" width="500" /> 
 </a>
 </p>
-</rect>
 
 
 # Welcome
