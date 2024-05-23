@@ -1,6 +1,11 @@
 # Brisk
-![logo-standard-color-rgb](https://github.com/brisktest/brisk/assets/405820/b15423d7-3704-4b3a-9b95-963d74e83a6e)
 
+
+<p align="center" style="text-align:center;">
+  <a href="https://brisktest.com">
+    ![logo-standard-color-rgb](https://github.com/brisktest/brisk/assets/405820/b15423d7-3704-4b3a-9b95-963d74e83a6e)
+  </a>
+</p>
 
 
 # Welcome
