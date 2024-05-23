@@ -6,7 +6,7 @@ If you have security concerns regarding Brisk software or you would like to repo
 
 In order for us to best respond to your report, please include any of the following:
 
-Steps to reproduce or proof-of-concept
-Any relevant tools, including versions used
-Tool output
+- Steps to reproduce or proof-of-concept
+- Any relevant tools, including versions used
+- Tool output
 
