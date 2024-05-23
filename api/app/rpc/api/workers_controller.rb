@@ -24,8 +24,9 @@ module Api
       if ENV['DEV'] == 'true'
         # little hack so we can have more than one worker in dev mode but we don't
         # have to deal with expiring and checking the workers.
-        ::Worker.active.where("created_at > ? ", 1.minute.ago).each(&:de_register!)
-        ::Worker.delete_all
+        ::Worker.active.where("created_at < ? ", 1.minute.ago).each(&:de_register!)
+        ::Worker.active.where("created_at < ? ", 1.minute.ago).delete_all
+
         Rails.logger.info('DEV mode, deregistering all workers before we add the new one')
       end
 
