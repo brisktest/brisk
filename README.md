@@ -1,6 +1,7 @@
 Brisk
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ===
+![logo-reversed-color-rgb](https://github.com/brisktest/brisk/assets/405820/73e18bb2-0e11-4a8e-8465-b9a7fc9cbabc)
 
 <rect width="100%"  height="80"  fill="white">
   
