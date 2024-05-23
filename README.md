@@ -2,10 +2,7 @@ Brisk
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ===
 
-  
-<div align="center">
-  <img width="100%" src="assets/github-logo.svg" alt="Brisk Logo">
-</div>
+<img alt="Brisk Logo" src="https://github.com/brisktest/brisk/assets/405820/73e18bb2-0e11-4a8e-8465-b9a7fc9cbabc" width="100%" />
 
 
 # Welcome
