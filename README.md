@@ -1,10 +1,5 @@
 # Brisk
 
-<p align="center" style="text-align:center;">
-  <a href="https://developer.hashicorp.com/nomad">
-    <img alt="HashiCorp Nomad logo" src="website/public/img/logo-hashicorp.svg" width="500" />
-  </a>
-</p>
 
 <p align="center" style="text-align:center;">
   <a href="https://brisktest.com">
