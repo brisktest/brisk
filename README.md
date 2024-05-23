@@ -4,7 +4,7 @@ Brisk
 
   
 <div align="center">
-  <img width="100%" src="assets/logo.svg" alt="Brisk Logo">
+  <img width="100%" src="assets/github-logo.svg" alt="Brisk Logo">
 </div>
 
 
