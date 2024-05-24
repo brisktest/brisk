@@ -15,7 +15,7 @@ Brisk is an extremely fast CI system, based around not rebuilding your environme
 
 # Getting Started
 
-The root of this repo contains a docker-compose.yml file which has a simple single worker deployment of Brisk. It is suitable for testing locally and can be used as a starting point for deploying to production. 
+The root of this repository contains a docker-compose.yml file which has a simple single worker deployment of Brisk. It is suitable for testing locally and can be used as a starting point for deploying to production. 
 
 Brisk consists of several services that are designed to be run across hundreds to thousands of machines. The docker-compose.yml contains the simplest possible deployment, one of each of the services. 
 
@@ -27,7 +27,7 @@ docker compose up
 
 # The CLI
 
-In order to access Brisk from your project directory (where the source code you are trying to test lives) you'll need to use the CLI. You can download a prebuilt build from https://docs.brisktest.com/docs/installation or you can build the cli from this repo. 
+In order to access Brisk from your project directory (where the source code you are trying to test lives) you'll need to use the CLI. You can download a pre-built build from https://docs.brisktest.com/docs/installation or you can build the cli from this repository. 
 
 In order to build the CLI you cd to 
 
@@ -47,12 +47,12 @@ Examples include Github Actions, CircleCI, Bitbucket, AWS etc.
 
 These docs cover using the CLI as a client and include everything about configuring brisk.json, using the CLI and setting up your build. 
 
-We refer you to these docs for using the brisk client, for setting up and running the backend this repo is the main source of documentation. 
+We refer you to these docs for using the brisk client, for setting up and running the backend this repository is the main source of documentation. 
 
 # Brisk High Level Architecture
 
-Brisk consistes of a CLI program that talks to a an API and a dedicated supervisor (running in the cloud) which splits tests among many workers.
-In production the CLI is the only componenet that runs locally (or in your CI Pipeline), everything else runs in the cloud. 
+Brisk consists of a CLI program that talks to a an API and a dedicated supervisor (running in the cloud) which splits tests among many workers.
+In production the CLI is the only component that runs locally (or in your CI Pipeline), everything else runs in the cloud. 
 
 
 
