@@ -333,7 +333,6 @@ func executeCommandStream(commandChan chan *api.Command, ctx context.Context, er
 
 		Logger(ctx).Debug("Before start")
 		startTime := time.Now()
-		// this is where we actually run the command - but it doesn't seem to cancel on ctx done
 		cmdWait, startErr := TermStart(ctx, cmd)
 
 		if startErr != nil {
@@ -748,7 +747,7 @@ func main() {
 	defer cleanup()
 	ctx, span := otel.Tracer(name).Start(ctx, "Main")
 	defer span.End()
-	// defer SafeExit(nil)
+
 	brisk_metrics.StartPrometheusServer(ctx)
 
 	go func() {
@@ -876,9 +875,6 @@ func listenOn(ctx context.Context, port string) (func(), error) {
 			),
 			grpc_recovery.StreamServerInterceptor(),
 			grpc_ctxtags.StreamServerInterceptor(),
-			//grpc_opentracing.StreamServerInterceptor(),
-			// grpc_prometheus.StreamServerInterceptor,
-			//grpc_zap.StreamServerInterceptor(zapLogger),
 			grpc_auth.StreamServerInterceptor(DoAuth),
 		))
 
@@ -887,7 +883,7 @@ func listenOn(ctx context.Context, port string) (func(), error) {
 	)
 
 	pb.RegisterCommandRunnerServer(s, &server{})
-	// grpc_prometheus.Register(s)
+
 	go func() {
 		if err := s.Serve(lis); err != nil {
 			Logger(ctx).Errorf("failed to serve: %v", err)

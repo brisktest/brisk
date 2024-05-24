@@ -75,7 +75,6 @@ import (
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/status"
 
-	"net/http"
 	_ "net/http/pprof"
 )
 
@@ -110,7 +109,7 @@ func (s *server) Setup(ctx context.Context, data *pb.TestOption) (*pb.Response, 
 
 	ctx = AddMetadataToCtx(ctx)
 	defer Logger(ctx).Debug("Setup--")
-	// add the additional directoy path (hashed)
+
 	ptErr := CheckGlobalProjectToken(ctx, globalProjectToken)
 	if ptErr != nil {
 		Logger(ctx).Errorf("Project token error %s", ptErr.Error())
@@ -208,7 +207,6 @@ func (s *server) Lock(LockRequest *brisksupervisor.LockRequest, stream brisksupe
 		streamErr := stream.Send(&rs)
 		if streamErr != nil {
 			Logger(ctx).Errorf("Error sending lock response %v", streamErr)
-			// return streamErr
 		}
 
 		select {
@@ -217,9 +215,6 @@ func (s *server) Lock(LockRequest *brisksupervisor.LockRequest, stream brisksupe
 			lockChannel <- true
 			return nil
 		case <-time.After(projectRunTimeout):
-			// Should we kill the super here?
-			// We are in a weird state and don't want to be running again.
-			// why can't I just have tons of supers and just manage the workers between them
 
 			Logger(ctx).Error("We timed out waiting for the lock to be released")
 			lockChannel <- true
@@ -243,7 +238,6 @@ func (s *server) RunTests(TestOption *pb.TestOption, stream brisksupervisor.Bris
 
 	ctx, span := otel.Tracer(name).Start(ctx, "RunTests")
 	defer span.End()
-	//maybe I need to do all of my defers before the cancelCtx
 	ctx, cancel := context.WithCancelCause(ctx)
 	errChannel := make(chan error, 1)
 	defer cancel(errors.New("returned from RunTests stream"))
@@ -265,14 +259,6 @@ func (s *server) RunTests(TestOption *pb.TestOption, stream brisksupervisor.Bris
 	defer bugsnag.AutoNotify(ctx)
 
 	startRunTests := time.Now()
-	// if reserveOrWaitForSuper(ctx) {
-	// 	// shouldn't this be protected by a lock already ??
-	// 	Logger(ctx).Debugf("locked super ")
-	// 	defer unreserveSuper(ctx)
-	// } else {
-	// 	Logger(ctx).Errorf("Can't run tests")
-	// 	return ProjectInUseError
-	// }
 
 	defer func() {
 		Logger(ctx).Debugf("TIMING Run tests took %v ", time.Since(startRunTests))
@@ -318,7 +304,6 @@ func (s *server) RunTests(TestOption *pb.TestOption, stream brisksupervisor.Bris
 			Logger(ctx).Panic("Panic in RunTests - repanicing %v", r)
 		}
 	}(responseStream)
-	// how big is this buffer going to get?
 	s3Buffer := &bytes.Buffer{}
 	logUid := uuid.New().String()
 	Logger(ctx).Infof("logUid for this group of runs is %s", logUid)
@@ -479,8 +464,6 @@ func init() {
 func main() {
 	fmt.Print("Starting up the Supervisor - in main\n")
 
-	// runtime.SetBlockProfileRate(1)
-
 	ctx := context.Background()
 	env.InitServerViper(ctx)
 	fmt.Println("init env done")
@@ -511,19 +494,6 @@ func main() {
 
 	brisk_metrics.StartPrometheusServer(ctx)
 
-	// go func() {
-	// 	OutputRuntimeStats(ctx)
-	// }()
-
-	// defer func() {
-	// 	if err := recover(); err != nil {
-	// 		// if we're in here, we had a panic and have caught it
-	// 		Logger(ctx).Debugf("we safely caught the panic: %s\n", err)
-	// 		DeRegisterSuper(super)
-	// 		SafeExit(err.(error))
-
-	// 	}
-	// }()
 	Logger(ctx).Info("Init Super")
 
 	serverGracefulStop := listenOn(ctx, ":50050")
@@ -652,16 +622,9 @@ func listenOn(ctx context.Context, port string) func() {
 		),
 			grpc_recovery.StreamServerInterceptor(),
 			grpc_ctxtags.StreamServerInterceptor(),
-			//grpc_opentracing.StreamServerInterceptor(),
-			// grpc_prometheus.StreamServerInterceptor,
-			//grpc_zap.StreamServerInterceptor(zapLogger),
 			grpc_auth.StreamServerInterceptor(DoAuth),
 		))
 	Logger(ctx).Debugf("Listening on port %v", port)
-	go func() {
-		// adding this for testing purposes - won't be accesible from outside the control pane
-		http.ListenAndServe(":8024", nil)
-	}()
 	pb.RegisterBriskSupervisorServer(s, &server{})
 
 	RegisterHealthCheck(ctx, s)
@@ -674,8 +637,6 @@ func listenOn(ctx context.Context, port string) func() {
 	return s.GracefulStop
 }
 
-// might think about setting a different directory for each project
-// could help with caching, debuging and provide a tiny bit of obscurity
 func addDefaultRemoteDirectory(ctx context.Context, buildCommands []*api.Command, command api.Command) ([]*api.Command, api.Command) {
 	for i := range buildCommands {
 
@@ -683,12 +644,7 @@ func addDefaultRemoteDirectory(ctx context.Context, buildCommands []*api.Command
 			buildCommands[i].WorkDirectory = "/tmp/remote_dir/"
 		}
 	}
-	// for i, _ := range commands {
-	// 	if commands[i].WorkDirectory == "" {
 
-	// 		commands[i].WorkDirectory = "/tmp/remote_dir/"
-	// 	}
-	// }
 	command.WorkDirectory = "/tmp/remote_dir/"
 	return buildCommands, command
 
@@ -715,10 +671,6 @@ func AddDefaultRemoteDirectorybriskSupervisor(ctx context.Context, buildCommands
 func runTestTheTests(ctx context.Context, responseStream chan *pb.Output, buildCommands []*api.Command, command api.Command, config *brisksupervisor.Config, repoInfo api.RepoInfo, logUid string) (bool, error) {
 	ctx, cancel := context.WithCancelCause(ctx)
 
-	// if len(commands) == 0 {
-	// 	Logger(ctx).Errorf("Incorrect Config provided : commands is  %+v", commands)
-	// 	return false, errors.New("Incorrect Config: commands can not be blank ")
-	// }
 	defer cancel(errors.New("returned from runTestTheTests"))
 	ctx, runTestTheTestsSpan := otel.Tracer(name).Start(ctx, "runTestTheTests")
 	defer runTestTheTestsSpan.End()
@@ -735,8 +687,6 @@ func runTestTheTests(ctx context.Context, responseStream chan *pb.Output, buildC
 	}
 
 	buildCommands, command = addDefaultRemoteDirectory(ctx, buildCommands, command)
-	// traceKey := md["trace-key"][0]
-	// ConfigureLogger(traceKey)
 
 	Logger(ctx).Debugf("Run test the %v tests has buildCommands with values: %+v", len(buildCommands), buildCommands)
 
@@ -773,12 +723,8 @@ func runTestTheTests(ctx context.Context, responseStream chan *pb.Output, buildC
 	var finalWorkerCount int32 = -1
 	var failingWorkers []*api.Worker
 
-	// authcreds, authErr := auth.GetAuthCredsFromMd(ctx)
-	// unCancelled, authErr = auth.AddAuthToCtx(unCancelled, authcreds)
-	// I set jrunStatus to success at the end
 	defer func(ctx context.Context, logger *BriskLogger) {
-		// little pause to let the LogRuns finish
-		// time.Sleep(1 * time.Second)
+
 		logger.Debugf("Defer func for FinishRun values are jobRunId: %v,	jrunStatus: %v, exitCode: %v, output: %v, errorOutput: %v , finalWorkerCount %v, failingWorkers %v", jobrunId, jrunStatus, exitCode, output, errorOutput, finalWorkerCount, failingWorkers)
 
 		if jobrunId == -1 {
@@ -858,9 +804,7 @@ func runTestTheTests(ctx context.Context, responseStream chan *pb.Output, buildC
 	if syncErr != nil {
 		Logger(ctx).Errorf("Sync error is %v  Workers count was %v, now %v", syncErr, beforeSyncCount, len(goodWorkers))
 		responseStream <- &pb.Output{Response: fmt.Sprintf("Got an Error syncing - recoverable. Workers count was %v, now %v", beforeSyncCount, len(goodWorkers)), Stdout: syncErr.Error(), Stderr: syncErr.Error(), Created: timestamppb.Now()}
-		//TODO we need to update the jobrun with the new assigned concurrency - or change the logic at the end of FinishRun - because at present
-		// We think it has failed because not all of the workers report back
-		// SO maybe UpdateJobrunConcurrency(  new concurrency)
+
 	}
 	Logger(ctx).Debugf("TIMING Sync done after %v", time.Since(startRunTestTheTests))
 
@@ -1019,16 +963,15 @@ func runTestTheTests(ctx context.Context, responseStream chan *pb.Output, buildC
 					Logger(ctx).Debug("We are not python, so we are not going to send a blank file")
 					responseStream <- &pb.Output{Response: "Error running tests - we have more workers than test files and so we are sending an empty file list to one or more workers - reduce BRISK_CONCURRENCY to be less than or equal to the number of tests", Stderr: "Error running tests - we have more workers than test files and so we are sending an empty file list to one or more workers - reduce BRISK_CONCURRENCY to be less than or equal to the number of tests", Created: timestamppb.Now()}
 
-					//TODO verify what happens here  - I think we are panicing in this instance which isn't good
 					files = []string{""}
-					// wg.Done()
+
 					return
 				}
 			}
 
 			// prevents weird bugs cause we change these later
 			var copiedRequests []api.Command
-			// for _, v := range requests {
+
 			copVI, err := copystructure.Copy(request)
 			if err != nil {
 				Logger(ctx).Errorf("Error copying request %v", err)
@@ -1039,16 +982,9 @@ func runTestTheTests(ctx context.Context, responseStream chan *pb.Output, buildC
 			copV.WorkerNumber = int32(i)
 			copV.TotalWorkerCount = int32(len(goodWorkers))
 			copV.Stage = "Run"
-			// copiedRequests = append(copiedRequests, *copV)
 			copiedRequest := copV
-			// }
 
 			Logger(ctx).Infof("Copied Requests %+v", copiedRequest)
-			// if len(copiedRequests) > 0 {
-			// 	Logger(ctx).Infof("Copied Request commandline %v coppiedd Request NoTestFiles %v", copiedRequests[0].Commandline, copiedRequests[0].NoTestFiles)
-			// } else {
-			// 	Logger(ctx).Infof("Copied Request is empty")
-			// }
 
 			var copiedBuildCmds []api.Command
 			if len(os.Getenv("ALWAYS_RUN_BUILDCOMMANDS")) > 0 || worker.BuildCommandsRunAt == nil {
@@ -1081,7 +1017,6 @@ func runTestTheTests(ctx context.Context, responseStream chan *pb.Output, buildC
 				responseStream <- &pb.Output{Response: err.Error(), Stderr: err.Error(), Exitcode: exitCode, Created: timestamppb.Now()}
 			}
 			uid := uuid.New().String()
-			//later we'll fill this in
 
 			buffer := &bytes.Buffer{}
 			bufferStream := make(chan *pb.Output)
@@ -1172,14 +1107,12 @@ func runTestTheTests(ctx context.Context, responseStream chan *pb.Output, buildC
 
 			Logger(ctx).Debugf("The run info is %+v", ri)
 
-			// go func() {
 			logRunErr := LogRun(unCancelledContext, &ri, Logger(ctx), &command)
 			if logRunErr != nil {
 				Logger(ctx).Errorf("Error logging run %v - run info is %+v", logRunErr, ri)
 				responseStream <- &pb.Output{Stderr: logRunErr.Error(), Created: timestamppb.Now()}
 			}
 			defer cancelUnCancel()
-			// }()
 
 			if err != nil {
 				Logger(ctx).Error("Error at end of loop: ", err.Error())
@@ -1217,12 +1150,6 @@ func runTestTheTests(ctx context.Context, responseStream chan *pb.Output, buildC
 
 	select {
 
-	// we probably do want to respond to the stream getting cancelled somewhere
-	// case c := <-ctx.Done():
-	// 	Logger(ctx).Debugf("Got context done %v", c)
-	// 	Logger(ctx).Infof("Context done with cause %v", context.Cause(ctx))
-
-	// 	return false, ctx.Err()
 	case e := <-exitChannel:
 		Logger(ctx).Debugf("Got exit channel with error %v", e)
 		return false, e
@@ -1236,10 +1163,6 @@ func runTestTheTests(ctx context.Context, responseStream chan *pb.Output, buildC
 		}
 		Logger(ctx).Debugf("Got all done")
 		return false, nil
-		// this seeems to cause problems with stuff not erroring out when it fails/timeouts
-		// case <-ctx.Done():
-		// 	Logger(ctx).Debugf("Got context done")
-		// 	return false, nil
 
 	}
 
@@ -1348,7 +1271,7 @@ func checkWorkersForRebuild(ctx context.Context, goodWorkers []*api.Worker, conf
 
 func createConnectionToWorkerNoRetry(ctx context.Context, worker *api.Worker, config *pb.Config) (*grpc.ClientConn, error) {
 
-	// Set up a connection to the server.
+	// Set up a connection to the worker.
 
 	endpoint := worker.IpAddress + ":" + worker.Port
 	if len(endpoint) <= 0 {
@@ -1366,6 +1289,7 @@ func createConnectionToWorkerNoRetry(ctx context.Context, worker *api.Worker, co
 		tlsConfig := &tls.Config{
 			//we aren't running a certificate authority so we need to disable this
 			//this traffic is also internal so we don't need to worry about it being MITM'd
+			// but in a zero trust environment we would want to enable this
 			InsecureSkipVerify: true,
 		}
 		dialOpt = grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))
@@ -1398,15 +1322,8 @@ func createConnectionToWorkerNoRetry(ctx context.Context, worker *api.Worker, co
 // we are ignoring build commands for that calculcation
 func connectToServer(ctx context.Context, files []string, requests []api.Command, buildCommands []api.Command, totalFileCount int, cs *countStruct, responseStream chan *pb.Output, worker api.Worker, config *brisksupervisor.Config) ([]*api.ExecutionInfo, error) {
 
-	// We need to check to see if context is cancelled and if it is we need to return from this function - now I think we are just hanging out here forever and that is not good
-
-	//long ass timeout
 	ctx, span := otel.Tracer(name).Start(ctx, "connectToServer(worker)")
 	defer span.End()
-
-	//this is going to be empty until the end
-
-	//10 minute + 10 seconds  timeout for the whole run
 
 	ctx, cancel := context.WithTimeout(ctx, viper.GetDuration("COMMAND_TIMEOUT"))
 	defer CancelCtx(ctx, cancel, "connectToServer has finished so we are cancelling the context")
@@ -1432,6 +1349,8 @@ func connectToServer(ctx context.Context, files []string, requests []api.Command
 	} else {
 		tlsConfig := &tls.Config{
 			//we aren't running a certificate authority so we need to disable this
+			//this traffic is also internal so we don't need to worry about it being MITM'd
+			// but in a zero trust environment we would want to enable this
 			InsecureSkipVerify: true,
 		}
 		dialOpt = grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))
@@ -1684,16 +1603,6 @@ func connectToServer(ctx context.Context, files []string, requests []api.Command
 
 			}
 
-			// Logger(ctx).Debugf("finished command %v", command)
-			// if we are looping - it would be good to figure out how long building takes
-			// var ei api.ExecutionInfo
-			// if len(allExecutionInfo) > 0 {
-			// 	ei = *allExecutionInfo[len(allExecutionInfo)-1]
-			// } else {
-			// 	ei = api.ExecutionInfo{}
-			// }
-
-			// Logger(ctx).Debugf("The execution info we have back is %v it's stage is %v and commandLine %v and rebuildHash", ei, command.Stage, command.Commandline, ei.RebuildHash)
 		}
 	}
 	Logger(ctx).Debugf("TIMING after requests are finished time is now %v", time.Since(startTime))
@@ -2145,7 +2054,6 @@ func warmOtherWorkers(ctx context.Context, workers []api.Worker, config *brisksu
 
 		buildCmds = append(buildCmds, copy)
 	}
-	// commands := []api.Command{{Commandline: config.ListTestCommand, WorkDirectory: workDir, IsListTest: true, IsTestRun: false, Environment: config.Environment, TestFramework: config.Framework}}
 	commands := []api.Command{{Commandline: "echo 'build commands run for worker'", WorkDirectory: workDir, IsListTest: true, IsTestRun: false, Environment: config.Environment, TestFramework: config.Framework}}
 	editedStream := make(chan *pb.Output, 1000)
 	ctx, cancel := context.WithTimeout(ctx, viper.GetDuration("DEFAULT_BUILD_TIMEOUT"))
@@ -2334,18 +2242,6 @@ func getWorkingWorkers(ctx context.Context, numWorkers int, workerImage string, 
 	}
 	return goodWorkers, jobrunId, jobrunLink, nil
 }
-
-// func addError(syncErr *syncError, err error) {
-// 	syncErr.m.Lock()
-// 	syncErr.errs = append(syncErr.errs, err)
-// 	syncErr.m.Unlock()
-
-// }
-
-// type syncError struct {
-// 	m    sync.Mutex
-// 	errs []error
-// }
 
 func syncToWorkers(ctx context.Context, workers []*api.Worker, config *brisksupervisor.Config) ([]*api.Worker, []*api.Worker, error) {
 	ctx, span := otel.Tracer(name).Start(ctx, "syncToWorkers")

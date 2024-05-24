@@ -295,7 +295,6 @@ func connectToServer(ctx context.Context, config Config, super *api.Super, outpu
 					outputChan <- &pb.Output{Response: fmt.Sprintf("Got error rebuilding - %v", clearErr)}
 
 				} else {
-					// should I quit? hmm
 					outputChan <- &pb.Output{Response: "Servers Cleared", Created: timestamppb.Now()}
 
 					return nil
@@ -402,11 +401,10 @@ func getSuperForProject(ctx context.Context, projectToken string, uniqueInstance
 func setupDisplay() OutputWriter {
 	status := NewStatusScreen()
 	status.SetColor(255, 255, 0)
-	// status.SetBackgroundColor(255, 255, 255)
+
 	scrolledOutput := NewScrollingScreen()
 	scrolledOutput.SetColor(255, 255, 255)
 	screens := []*ScreenSect{scrolledOutput, status}
-	//screens := []*shared.ScreenSect{&status}
 	display := NewDisplay(os.Stdout.Fd(), screens)
 
 	return display
@@ -474,7 +472,6 @@ func initialLoadConfig(ctx context.Context, workingDirectory string) (*Config, e
 	if _, err := os.Stat(configFile); os.IsNotExist(err) {
 		Logger(ctx).Errorf("No project found in current directory - checking path %s", configFile)
 
-		// fmt.Println("no project config file found in current directory - if you haven't run it before use \"brisk project init rails|jest \" to create one")
 		return nil, fmt.Errorf("config file %s not found - use \"brisk project init rails|jest \" to create one if this is your first run", configFile)
 	}
 	config, err := ReadConfig(ctx, viper.GetString("PROJECT_CONFIG_FILE"))
@@ -649,8 +646,6 @@ func RunBrisk(ctx context.Context) error {
 			if err == TestFailedError {
 
 				Logger(ctx).Error(err.Error())
-				// logOuputChannel <- pb.Output{Response: fmt.Sprintf("Error %v", err), Stderr: err.Error(), Created: timestamppb.Now()}
-				// time.Sleep(1 * time.Second)
 
 				forSpan.End()
 				cancelChan <- "tests failed"
@@ -838,7 +833,7 @@ func PrintContextInternals(ctx interface{}, inner bool) {
 
 }
 func setupKeys(ctx context.Context, config Config, authCreds auth.AuthCreds, c pb.BriskSupervisorClient, userDetails *pb.UserDetails, buildCommands []*api.Command) (string, string, error) {
-	// ctx = context.Background()
+
 	ctx, authErr := auth.AddAuthToCtx(ctx, authCreds)
 	if authErr != nil {
 		return "", "", authErr
@@ -922,9 +917,7 @@ func prepareOutgoingContextMin(ctx context.Context, projectToken string, authCre
 	}
 
 	traceKey := GetKey(ctx, projectToken)
-	// if viper.GetBool("PRINT_TRACE_KEY") {
-	// 	fmt.Printf("run: %v \n", traceKey)
-	// }
+
 	ctx = metadata.AppendToOutgoingContext(ctx, "trace-key", traceKey)
 	ctx = WithTraceId(ctx, traceKey)
 
@@ -932,12 +925,6 @@ func prepareOutgoingContextMin(ctx context.Context, projectToken string, authCre
 
 	ctx = metadata.AppendToOutgoingContext(ctx, "brisk_api_version", constants.VERSION)
 
-	//TODO why is this causing crazy crashes - 400s were we  don't even hit the LB
-	// ctx, authErr := auth.AddAuthToCtx(ctx, authCreds)
-
-	// if authErr != nil {
-	// 	return nil, fmt.Errorf("Need credentials +v", authErr)
-	// }
 	return ctx, nil
 }
 func prepareOutgoingContext(ctx context.Context, projectToken string, authCreds auth.AuthCreds, uniqueInstanceId string) (context.Context, error) {
@@ -1092,15 +1079,11 @@ func singleTestRun(ctx context.Context, super *api.Super, privateKey string, syn
 	Logger(ctx).Debugf("The config I'm sending is %+v", to.Config)
 	Logger(ctx).Debugf("The environment I'm sending is %+v", to.Config.Environment)
 
-	//for {
-
 	ctx, err = prepareOutgoingContext(ctx, projectToken, authCreds, uniqueInstanceId)
 	if err != nil {
 		Logger(ctx).Errorf("Error preparing outgoing context %v", err)
 		return startTime, err
 	}
-
-	//ctx = addAuthToMD(ctx, config)
 
 	Logger(ctx).Info("Init test run")
 	Logger(ctx).Debugf("TIMING Starting test run at %v", time.Since(
@@ -1137,7 +1120,6 @@ func singleTestRun(ctx context.Context, super *api.Super, privateKey string, syn
 		if in != nil && in.Control == types.FINISHED {
 			Logger(ctx).Debug("Got finished from server")
 			Logger(ctx).Debugf("Exit code is %v", in.Exitcode)
-			// Logger(ctx).Debug("we really aught to count these down so we know when we are finished")
 			Logger(ctx).Debugf("The final result from this test run is %+v", in)
 
 		}
@@ -1197,43 +1179,9 @@ func singleTestRun(ctx context.Context, super *api.Super, privateKey string, syn
 				}
 			}
 		}
-		//Logger(ctx).Debugf("in is %v", in)
-		//Logger(ctx).Debugf("response is %v", in.Response)
 
 	}
 }
-
-// // checks the git hash and rebuilds if required
-// func rebuildRequired(ctx context.Context, config Config) (bool, error) {
-// 	if viper.GetBool("NoRebuild") {
-// 		Logger(ctx).Info(" Not Rebuilding")
-// 		return false, nil
-// 	}
-// 	Logger(ctx).Debug("Checking if we need to rebuild")
-// 	Logger(ctx).Debugf("Hash file path is %v", viper.GetString("HashFilePath"))
-// 	Logger(ctx).Debugf("RebuildWatchPaths is %v", viper.GetStringSlice("RebuildWatchPaths"))
-// 	path, err := os.Getwd()
-
-// 	if err != nil {
-// 		Logger(ctx).Errorf("Error getting current working directory %v", err)
-// 		return false, err
-// 	}
-
-// 	val, err := git.RebuildRequired(ctx, viper.GetString("HashFilePath"), path, config.RebuildFilePaths)
-
-// 	if err != nil {
-// 		Logger(ctx).Error("Error checking if we need to rebuild %v", err)
-// 		return false, err
-// 	}
-// 	if val {
-// 		Logger(ctx).Info("Needs Rebuild")
-// 		return true, nil
-
-// 	} else {
-// 		Logger(ctx).Info("Not Rebuilding")
-// 		return false, nil
-// 	}
-// }
 
 func firstRunMessage() {
 	if (viper.GetTime("FIRST_RUN_AT") != time.Time{}) {
@@ -1345,12 +1293,10 @@ func printOutputLoop(ctx context.Context, config *Config, logOuputChannel chan *
 
 				} else {
 					Logger(ctx).Debug("Filtered log line ")
-					//Logger(ctx).Debug(output.Response)
 
 				}
 			} else {
 
-				//Logger(ctx).Debugf("Worker: %v - %v", printWorkerDetails(output), output.Response)
 				if output.Stderr != "" {
 					Logger(ctx).Debugf("%v, Worker: %v - %v ", output.Created.AsTime().Local().Format("15:04:05"), PrintWorkerDetails(output), output.Stderr)
 					if !shouldFilter(output, *config) {
