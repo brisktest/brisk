@@ -57,27 +57,27 @@ We refer you to these docs for using the brisk client, for setting up and runnin
 
 - Checkout this repo locally
 - run 
-```
-docker compose up
-```
-to start your local instance.
+    ```
+    docker compose up
+    ```
+    to start your local instance.
 - run the following commands to seed the local db and create the dev user
-```
-docker exec -it brisk-api-1 rails db:prepare db:seed
-```
+    ```
+    docker exec -it brisk-api-1 rails db:prepare db:seed
+    ```
 - either install the brisk cli or build your own by running local version (see above)
 - in a separate directory checkout out https://github.com/brisktest/react this will be your demo project
 - cd to the react project we just checked out
 - run 
-```
-BRISK_NO_BASTION=true BRISK_CONFIG_WARNINGS=true BRISK_APITOKEN=AfzWBMS8oy BRISK_APIKEY=dYho0h93lNfD/u/P  BRISK_DEV=true BRISK_APIENDPOINT=localhost:9001  brisk project init node
-```
-To create a node project in this directory
+    ```
+    BRISK_NO_BASTION=true BRISK_CONFIG_WARNINGS=true BRISK_APITOKEN=AfzWBMS8oy BRISK_APIKEY=dYho0h93lNfD/u/P  BRISK_DEV=true BRISK_APIENDPOINT=localhost:9001  brisk project init node
+    ```
+    To create a node project in this directory
 - run
-```
-BRISK_NO_BASTION=true BRISK_CONFIG_WARNINGS=true BRISK_APITOKEN=AfzWBMS8oy BRISK_APIKEY=dYho0h93lNfD/u/P  BRISK_DEV=true BRISK_APIENDPOINT=localhost:9001  brisk
-```
-to run your first test suite in brisk on your local machine.
+    ```
+    BRISK_NO_BASTION=true BRISK_CONFIG_WARNINGS=true BRISK_APITOKEN=AfzWBMS8oy BRISK_APIKEY=dYho0h93lNfD/u/P  BRISK_DEV=true BRISK_APIENDPOINT=localhost:9001  brisk
+    ```
+    to run your first test suite in brisk on your local machine.
 
 
 
