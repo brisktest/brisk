@@ -17,13 +17,17 @@ Brisk is an extremely fast CI system, based around not rebuilding your environme
 
 The root of this repository contains a docker-compose.yml file which has a simple single worker deployment of Brisk. It is suitable for testing locally and can be used as a starting point for deploying to production. 
 
-Brisk consists of several services that are designed to be run across hundreds to thousands of machines. The docker-compose.yml contains the simplest possible deployment, one of each of the services. 
+Brisk consists of several services that are designed to be run across hundreds to thousands of machines. The docker-compose.yml contains the simplest possible deployment, one of each of the services. It is good for development and for testing locally.
 
 To get started locally you can run 
 
 ```shell
 docker compose up
 ```
+# Deployment to Production
+
+We recommend using a container orchestrator such as Kubernetes or Nomad to orchestrate your production deployment. We use Nomad internally but we also have examples which we can share for running k8s. Please contact us at support support@brisktest.com for more info and specific advice on your deployment. 
+
 
 # The CLI
 
@@ -48,6 +52,35 @@ Examples include Github Actions, CircleCI, Bitbucket, AWS etc.
 These docs cover using the CLI as a client and include everything about configuring brisk.json, using the CLI and setting up your build. 
 
 We refer you to these docs for using the brisk client, for setting up and running the backend this repository is the main source of documentation. 
+
+# Getting started contributing
+
+- Checkout this repo locally
+- run 
+```
+docker compose up
+```
+to start your local instance.
+- run the following commands to seed the local db and create the dev user
+```
+docker exec -it brisk-api-1 rails db:prepare db:seed
+```
+- either install the brisk cli or build your own by running local version (see above)
+- in a separate directory checkout out https://github.com/brisktest/react this will be your demo project
+- cd to the react project we just checked out
+- run 
+```
+BRISK_NO_BASTION=true BRISK_CONFIG_WARNINGS=true BRISK_APITOKEN=AfzWBMS8oy BRISK_APIKEY=dYho0h93lNfD/u/P  BRISK_DEV=true BRISK_APIENDPOINT=localhost:9001  brisk project init node
+```
+To create a node project in this directory
+- run
+```
+BRISK_NO_BASTION=true BRISK_CONFIG_WARNINGS=true BRISK_APITOKEN=AfzWBMS8oy BRISK_APIKEY=dYho0h93lNfD/u/P  BRISK_DEV=true BRISK_APIENDPOINT=localhost:9001  brisk
+```
+to run your first test suite in brisk on your local machine.
+
+
+
 
 # Brisk High Level Architecture
 
