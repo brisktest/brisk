@@ -96,13 +96,8 @@ func InitCLIViper(ctx context.Context) {
 			fmt.Println(err)
 			Logger(ctx).Fatal(err)
 		}
-	} else {
-		err = viper.WriteConfigAs(filename)
-		if err != nil {
-			fmt.Println(err)
-			Logger(ctx).Fatal(err)
-		}
 	}
+
 	err = viper.MergeInConfig()
 	if err != nil {
 		fmt.Println(err)
