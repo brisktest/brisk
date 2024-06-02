@@ -13,6 +13,49 @@ If you would prefer to use a hosted service instead of hosting your own CI syste
 
 Brisk is an extremely fast CI system, based around not rebuilding your environment on each test run. This allows us to really get the most from multiple workers. Instead of losing minutes rebuilding the environment on each run we instead can have the workers go straight to work running tests. This dramatically shortens the total time a test run takes. With enough workers the speed of your longest test becomes the limit for how long your CI tests take. 
 
+# How Brisk Works
+
+Brisk is a CI system that is redesigned from the ground up for performance. 
+
+Once single CPU performance is exhausted when running test suites the next method for scaling performance is by adding more CPUs in the form of additional workers. 
+
+Where Brisk differs from other CI systems is that instead of rebuilding our workers on every test run, we retain our test environments between test runs. This means that when your test starts it doesn't have to perform a costly build of the environment and instead has a worker ready to start executing tests immediately.
+
+## How do we know if/when we need to rebuild the environment
+
+We compute a rebuild hash for each worker and project directory. The rebuild hash is a hash of one or more files in the project directory. If these files change the hash is invalid and we need to rebuild* . A simple rebuild hash for a Node project might be
+
+```json
+ "rebuildFilePaths": ["package.json", "yarn.lock"],
+```
+
+> **_NOTE:_** it's not quite as simple as that;  we continue expanding workers until we reach the worker limit then we start reaping the workers with the least recently used hashes. This allows us to support multiple hashes for a project without constantly rebuilding if the jobs are arriving in an interleaved manner. Interleaving of different hashes is a common pattern when someone makes a change to a file that makes up the rebuild hash - e.g. they add a file to package.json 
+
+## Retaining the Test Environment between test runs
+
+### A little about how Brisk is implemented.
+
+Workers in Brisk are simple docker containers. Each container contains the brisk worker executable, the setup for a specific worker image (say a Node image) and the project code. These containers are started in advance and when required by a project are claimed by the project. We then run the test suite on the worker. Once the test suite is finished we don't destroy the container. On the next test run if this worker is suitable for the project (has the correct rebuild hash and is not contended) we may reuse this worker for the project. This means that the test suite runs immediately as the container is warm and ready to go with the test environment fully ready. 
+
+> **_NOTE:_** Containers are never reused between projects, once a project is finished with a container it is destroyed.
+
+> **_NOTE:_** Contention: Brisk is built on the concept of squeezing a large number of docker containers onto a smaller set of hosts (physical machines or virtual machines). On each host, CPU - which tends to be the limiting factor for test speed - is shared among all of the containers on the host. We try not to run test suites in containers on the same physical host as then we are just fighting over the same CPU. Instead we distribute the workers over the available physical hosts and do not select workers for a test run if they share a physical host. 
+
+## Test Splitting
+
+When we scale out to many workers we need to optimally split the test suites between the workers. Brisk supports a number of test splitting algorithms, e.g. if you are using JUnit output you can provide a test split based on test speeds, however Brisk can also learn the optimal split.
+
+### Partition Test Split
+
+Brisk records the length of time every test run takes. If there is a single test file in a test run we can just record the time the test run has taken and be somewhat confident of the result. Most brisk test suites have hundreds of test files that need to be split. 
+We have developed a novel algorithm for test splitting. 
+
+On the first run we split all of the files evenly across all of the workers. We then record the time it took for each worker to finish. We can assign a time for each test run weighted by the confidence we have in the measurement. 
+
+On the next run, starting at the slowest worker, if there is just one file we simply use that file (we can't split below the file level). If there is more than one file we move the fastest test (as determined by the previous speed measurement) to the worker that completed in the fastest time. This speeds up the slowest worker and slows down the fastest worker. We then move through the workers repeating this process until we get to the mid point of the workers, the tests are now more balanced.
+
+We repeat this algorithm on each test run to balance the test files over all of the available workers. 
+
 # Getting Started
 
 The root of this repository contains a docker-compose.yml file which has a simple single worker deployment of Brisk. It is suitable for testing locally and can be used as a starting point for deploying to production. 
