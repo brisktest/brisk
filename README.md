@@ -35,11 +35,23 @@ We compute a rebuild hash for each worker and project directory. The rebuild has
 
 ### A little about how Brisk is implemented.
 
-Workers in Brisk are simple docker containers. Each container contains the brisk worker executable, the setup for a specific worker image (say a Node image) and the project code. These containers are started in advance and when required by a project are claimed by the project. We then run the test suite on the worker. Once the test suite is finished we don't destroy the container. On the next test run if this worker is suitable for the project (has the correct rebuild hash and is not contended) we may reuse this worker for the project. This means that the test suite runs immediately as the container is warm and ready to go with the test environment fully ready. 
+Workers in Brisk are long running docker containers. Each container contains the brisk worker executable, the setup for a specific worker image (say a Node image) and the project code. These containers are started in advance and when required by a project are claimed by the project. We then run the test suite on the worker. Once the test suite is finished we don't destroy the container. On the next test run if this worker is suitable for the project (has the correct rebuild hash and is not contended) we may reuse this worker for the project. This means that the test suite runs immediately as the container is warm and ready to go with the test environment fully ready. 
+
 
 > **_NOTE:_** Containers are never reused between projects, once a project is finished with a container it is destroyed.
 
 > **_NOTE:_** Contention: Brisk is built on the concept of squeezing a large number of docker containers onto a smaller set of hosts (physical machines or virtual machines). On each host, CPU - which tends to be the limiting factor for test speed - is shared among all of the containers on the host. We try not to run test suites in containers on the same physical host as then we are just fighting over the same CPU. Instead we distribute the workers over the available physical hosts and do not select workers for a test run if they share a physical host. 
+
+### Project Sync
+
+In order to get the updated code onto a worker we sync the code from the local machine to a supervisor which then syncs to each of the workers. 
+
+> **_NOTE:_** This two step sync process is much faster than a direct sync as the network speed between the CLI and the Supervisor is orders of magnitude slower than the network between the Supervisor and the Workers.
+
+> **_NOTE:_** We use rsync for this process. It's fast, very stable, we can combine it with ssh for security and it is well supported across different platforms. Using ssh + rsync we also tunnel through a bastion for increased security. 
+
+
+
 
 ## Test Splitting
 
