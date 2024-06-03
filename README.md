@@ -40,7 +40,7 @@ Workers in Brisk are long running docker containers. Each container contains the
 
 > **_NOTE:_** Containers are never reused between projects, once a project is finished with a container it is destroyed.
 
-> **_NOTE:_** Contention: Brisk is built on the concept of squeezing a large number of docker containers onto a smaller set of hosts (physical machines or virtual machines). On each host, CPU - which tends to be the limiting factor for test speed - is shared among all of the containers on the host. We try not to run test suites in containers on the same physical host as then we are just fighting over the same CPU. Instead we distribute the workers over the available physical hosts and do not select workers for a test run if they share a physical host. 
+> **_NOTE:_** Contention: Brisk is built on the concept of running a large number of docker containers on a smaller set of hosts (physical machines or virtual machines). On each host, CPU - which tends to be the limiting factor for test speed - is shared among all of the containers on the host. We try not to run test suites in containers on the same physical host as then we are just fighting over the same CPU. Instead we distribute the workers over the available physical hosts and do not select workers for a test run if they share a physical host. 
 
 ### Project Sync
 
