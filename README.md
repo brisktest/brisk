@@ -49,7 +49,9 @@ In order to get the updated code onto a worker we sync the code from the local m
 
 > **_NOTE:_** This two step sync process is much faster than a direct sync as the network speed between the CLI and the Supervisor is orders of magnitude slower than the network between the Supervisor and the Workers.
 
-> **_NOTE:_** We use rsync for this process. It's fast, very stable, we can combine it with ssh for security and it is well supported across different platforms. Using ssh + rsync we also tunnel through a bastion for increased security. 
+> **_NOTE:_** We use rsync for this process. It's fast, very stable, we can combine it with ssh for security and it is well supported across different platforms. Using ssh + rsync we also tunnel through a bastion for increased security.
+> **_NOTE:_** To prevent certain files from syncing you can list them using the excludedFromSync config directive. This is useful for preventing sync of logs, or node_modules etc which may be platform specific or tied to the development machine.
+
 
 
 
